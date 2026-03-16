@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FNS NOTAM Intelligence</title>
+  <title>FNS NOTAM Intelligence -- JS Labs</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -23,7 +23,7 @@
     body{background:var(--bg);color:var(--text);font:13px/1.45 var(--sans)}
 
     /* -- Layout: header | sidebar+map | table -- */
-    #app{display:grid;grid-template-rows:40px 1fr 280px;height:100vh;overflow:hidden}
+    #app{display:grid;grid-template-rows:40px 1fr 280px 22px;height:100vh;overflow:hidden}
 
     /* -- Top bar -- */
     header{
@@ -208,6 +208,17 @@
     }
     .resize-handle:hover{background:var(--accent)}
 
+    /* -- Footer bar -- */
+    .site-footer{
+      display:flex;align-items:center;gap:12px;
+      padding:0 12px;height:22px;flex-shrink:0;
+      background:var(--surface);border-top:1px solid var(--border);
+      font-size:10px;color:var(--text-dim);
+    }
+    .site-footer a{color:var(--accent);text-decoration:none}
+    .site-footer a:hover{text-decoration:underline}
+    .site-footer .spacer{flex:1}
+
     /* -- Scrollbar -- */
     ::-webkit-scrollbar{width:6px;height:6px}
     ::-webkit-scrollbar-track{background:transparent}
@@ -220,6 +231,8 @@
   <!-- Top bar -->
   <header>
     <span class="brand">FNS NOTAM INTEL</span>
+    <span class="sep"></span>
+    <span style="font-size:10px;color:var(--text-dim);letter-spacing:0.04em">JS LABS</span>
     <span class="sep"></span>
     <span class="kv"><span class="k">DB</span><span class="v" id="hdrDbStatus"><span class="dot dot-amber"></span></span></span>
     <span class="kv"><span class="k">Active</span><span class="v" id="hdrActiveCount">--</span></span>
@@ -314,6 +327,15 @@
       <div class="empty-state" id="emptyState">Waiting for data.</div>
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <span>JS Labs Prototype -- NOT FOR OPERATIONAL AVIATION USE</span>
+    <span class="spacer"></span>
+    <span>James Sawyer</span>
+    <a href="https://labs.jamessawyer.co.uk/" target="_blank" rel="noopener">labs.jamessawyer.co.uk</a>
+    <a href="https://github.com/tg12" target="_blank" rel="noopener">github.com/tg12</a>
+  </footer>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

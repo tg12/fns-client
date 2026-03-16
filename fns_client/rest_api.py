@@ -1,3 +1,10 @@
+# FNS NOTAM Client -- A JS Labs Prototype
+# Copyright (c) 2026 James Sawyer
+# https://labs.jamessawyer.co.uk/ | https://github.com/tg12
+#
+# PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. NOT FOR OPERATIONAL
+# AVIATION USE. See README.md and LICENSE for full terms.
+
 """FastAPI application for NOTAM queries."""
 
 from __future__ import annotations

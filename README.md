@@ -60,10 +60,20 @@ This is a prototype for personal use and experimentation. It is not intended to 
 
 ---
 
+## Screenshots
+
+### Dashboard -- live NOTAM map with 3,700+ active NOTAMs
+
+![FNS NOTAM Intel Dashboard](docs/screenshots/dashboard.png)
+
+*Dark-theme NOC-style interface showing the world map with urgency-coloured NOTAM markers, classification breakdown, filters, and live NOTAM feed table.*
+
+---
+
 ## Author
 
 **James Sawyer**
-[https://labs.jamessawyer.co.uk/](https://labs.jamessawyer.co.uk/)
+[https://labs.jamessawyer.co.uk/](https://labs.jamessawyer.co.uk/) | [https://github.com/tg12](https://github.com/tg12)
 
 ---
 
