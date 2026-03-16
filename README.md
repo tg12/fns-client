@@ -1,18 +1,42 @@
 # FNS NOTAM Client
 
 > **A [JS Labs](https://labs.jamessawyer.co.uk/) Prototype**
+>
+> This is an independent experimental project by James Sawyer.
+> It is not production software. No warranties of any kind are given.
 
 ---
 
-## DISCLAIMER
+## IMPORTANT LEGAL NOTICE
 
-**THIS PROJECT IS NOT AN OFFICIAL PRODUCT OF, ENDORSED BY, AFFILIATED WITH, OR IN ANY WAY ASSOCIATED WITH THE UNITED STATES GOVERNMENT, THE FEDERAL AVIATION ADMINISTRATION (FAA), THE DEPARTMENT OF TRANSPORTATION (DOT), THE SWIM PROGRAM OFFICE, SOLACE CORPORATION, OR ANY OTHER GOVERNMENT AGENCY OR CONTRACTOR.**
+### 1. No government affiliation
 
-**THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.**
+This project is **not** an official product of, endorsed by, affiliated with, or in any way associated with:
 
-**DO NOT USE THIS SOFTWARE FOR OPERATIONAL AVIATION DECISIONS. NOTAM DATA DISPLAYED BY THIS CLIENT MAY BE INCOMPLETE, DELAYED, OR INCORRECT. ALWAYS CONSULT OFFICIAL FAA SOURCES FOR FLIGHT-CRITICAL INFORMATION.**
+- The United States Government
+- The Federal Aviation Administration (FAA)
+- The Department of Transportation (DOT)
+- The SWIM Program Office
+- Solace Corporation
+- Any other government agency, contractor, or data provider
 
-**NO WARRANTIES ARE GIVEN. USE ENTIRELY AT YOUR OWN RISK.**
+"FAA", "SWIM", "FNS", and "NOTAM" are used here solely to describe the public data source this client connects to. All trademarks belong to their respective owners.
+
+### 2. No warranty
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING BUT NOT LIMITED TO PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE, DATA, OR PROFITS, OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### 3. Not for operational use
+
+**DO NOT USE THIS SOFTWARE FOR OPERATIONAL AVIATION DECISIONS.**
+
+NOTAM data displayed by this client may be incomplete, delayed, stale, or incorrect. This client is an independent consumer of publicly available SWIM data and has no guarantee of data freshness, completeness, or accuracy. Always consult official FAA sources (https://notams.aim.faa.gov/) for flight-critical information.
+
+### 4. Prototype status
+
+This is a **JS Labs prototype** built for personal learning and experimentation. It is not production-grade software. It has not been audited, certified, or validated for any operational, commercial, or safety-critical purpose. Use entirely at your own risk.
 
 ---
 
@@ -225,5 +249,5 @@ Complete ground-up reimplementation. The original Java/Maven reference client ha
 
 ---
 
-*JS Labs Prototype -- no warranties given. Not for operational use.*
+*JS Labs Prototype by [James Sawyer](https://labs.jamessawyer.co.uk/) -- provided "as is" with no warranties of any kind. Not for operational aviation use.*
 
