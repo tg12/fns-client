@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fns-client"
+version = "2.0.0"
+description = "Python reimplementation of the FAA SWIM FNS reference client"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "colorlog>=6.9.0",
+  "fastapi>=0.116.0",
+  "paramiko>=3.5.1",
+  "psycopg[binary]>=3.2.9",
+  "sqlalchemy>=2.0.38",
+  "uvicorn>=0.35.0",
+  "xmltodict>=0.14.2",
+  "solace-pubsubplus>=1.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.5",
+]
+
+[project.scripts]
+fns-client = "fns_client.__main__:main"
+
+[tool.setuptools]
+packages = ["fns_client"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# -- ruff ---------------------------------------------------------------
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+src = ["fns_client", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "N",    # pep8-naming
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "SIM",  # flake8-simplify
+  "T20",  # flake8-print
+  "RUF",  # ruff-specific rules
+]
+ignore = [
+  "E501",   # line length handled by formatter
+  "SIM108", # ternary not always clearer
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fns_client"]
+
+# -- black --------------------------------------------------------------
+[tool.black]
+target-version = ["py311"]
+line-length = 88
+
+# -- autopep8 ------------------------------------------------------------
+[tool.autopep8]
+max_line_length = 88
+aggressive = 1
+
+# -- vulture -------------------------------------------------------------
+[tool.vulture]
+paths = ["fns_client", "tests"]
+min_confidence = 80

@@ -1,192 +1,886 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-  <title>NOTAM Viewer</title>
-  <!-- Required meta tags -->
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FNS NOTAM Intelligence</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0e14;--surface:#141820;--surface-2:#1a1f2b;--border:#252b38;
+      --text:#cdd6e4;--text-dim:#6b7a90;--text-bright:#e8edf5;
+      --accent:#3b82f6;--accent-dim:rgba(59,130,246,0.12);
+      --green:#22c55e;--green-dim:rgba(34,197,94,0.14);
+      --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.14);
+      --red:#ef4444;--red-dim:rgba(239,68,68,0.14);
+      --cyan:#06b6d4;--cyan-dim:rgba(6,182,212,0.14);
+      --mono:"SF Mono","Cascadia Code","Fira Code",monospace;
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      --radius:4px;
+    }
+    html,body{height:100%;overflow:hidden}
+    body{background:var(--bg);color:var(--text);font:13px/1.45 var(--sans)}
 
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    /* -- Layout: header | sidebar+map | table -- */
+    #app{display:grid;grid-template-rows:40px 1fr 280px;height:100vh;overflow:hidden}
+
+    /* -- Top bar -- */
+    header{
+      display:flex;align-items:center;gap:16px;
+      padding:0 12px;background:var(--surface);border-bottom:1px solid var(--border);
+      font-size:12px;z-index:900;
+    }
+    .brand{font-weight:700;color:var(--text-bright);letter-spacing:0.04em;font-size:13px;white-space:nowrap}
+    .sep{width:1px;height:18px;background:var(--border)}
+    .kv{display:flex;gap:6px;align-items:center;white-space:nowrap}
+    .kv .k{color:var(--text-dim);text-transform:uppercase;font-size:10px;letter-spacing:0.06em}
+    .kv .v{font-family:var(--mono);font-size:12px}
+    .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+    .dot-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+    .dot-red{background:var(--red);box-shadow:0 0 6px var(--red)}
+    .dot-amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+    header .spacer{flex:1}
+    .hdr-btn{
+      background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+      padding:4px 10px;border-radius:var(--radius);cursor:pointer;font:inherit;font-size:11px;
+      transition:background 80ms;
+    }
+    .hdr-btn:hover{background:var(--border)}
+    .hdr-btn-accent{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+    .hdr-btn-accent:hover{background:rgba(59,130,246,0.22)}
+
+    /* -- Middle row: sidebar + map -- */
+    .mid{display:grid;grid-template-columns:300px 1fr;overflow:hidden}
+
+    /* -- Sidebar -- */
+    .sidebar{
+      display:flex;flex-direction:column;gap:0;
+      background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;
+    }
+    .sb-section{padding:10px 12px;border-bottom:1px solid var(--border)}
+    .sb-title{
+      font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+      color:var(--text-dim);margin-bottom:8px;
+    }
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .kpi{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
+      padding:8px 10px;
+    }
+    .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:2px}
+    .kpi-value{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text-bright)}
+    .kpi-value.sm{font-size:13px}
+    .class-bars{display:flex;flex-direction:column;gap:3px}
+    .class-row{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono)}
+    .class-row .label{width:36px;text-align:right;color:var(--text-dim);flex-shrink:0}
+    .class-row .bar-track{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+    .class-row .bar-fill{height:100%;border-radius:3px;background:var(--accent);transition:width 300ms}
+    .class-row .count{width:42px;color:var(--text);font-size:11px}
+
+    /* -- Filter controls -- */
+    .filter-row{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-input{
+      flex:1;min-width:0;
+      background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+      color:var(--text);font:12px var(--mono);padding:5px 8px;
+    }
+    .filter-input:focus{outline:none;border-color:var(--accent)}
+    .filter-input::placeholder{color:var(--text-dim)}
+    .filter-select{
+      background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+      color:var(--text);font:12px var(--mono);padding:5px 6px;
+    }
+    .filter-select:focus{outline:none;border-color:var(--accent)}
+    .sb-btn{
+      background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);
+      padding:5px 10px;border-radius:var(--radius);cursor:pointer;font:12px var(--sans);
+      font-weight:600;width:100%;margin-top:6px;transition:background 80ms;
+    }
+    .sb-btn:hover{background:rgba(59,130,246,0.22)}
+
+    /* -- Toggle switch -- */
+    .toggle-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--text)}
+    .toggle-row .toggle-label{user-select:none;cursor:pointer}
+    .toggle{position:relative;width:32px;height:18px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle .slider{position:absolute;inset:0;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:background 150ms}
+    .toggle .slider::before{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--text-dim);transition:transform 150ms,background 150ms}
+    .toggle input:checked+.slider{background:var(--accent-dim);border-color:var(--accent)}
+    .toggle input:checked+.slider::before{transform:translateX(14px);background:var(--accent)}
+
+    /* -- Detail panel in sidebar -- */
+    .detail-panel{padding:10px 12px;overflow-y:auto;flex:1;min-height:0}
+    .detail-empty{color:var(--text-dim);font-size:11px;text-align:center;padding:20px 0}
+    .detail-card{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
+      padding:10px;margin-bottom:6px;font-size:11px;line-height:1.5;
+    }
+    .detail-card .d-header{display:flex;justify-content:space-between;margin-bottom:4px}
+    .detail-card .d-id{font-family:var(--mono);color:var(--text-bright);font-weight:700}
+    .detail-card .d-class{
+      font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+      padding:1px 6px;border-radius:2px;
+    }
+    .d-class-DOM{background:var(--green-dim);color:var(--green)}
+    .d-class-INTL{background:var(--cyan-dim);color:var(--cyan)}
+    .d-class-FDC{background:var(--amber-dim);color:var(--amber)}
+    .d-class-MIL{background:var(--red-dim);color:var(--red)}
+    .d-class-LMIL{background:var(--red-dim);color:var(--red)}
+    .detail-card .d-loc{color:var(--accent);font-family:var(--mono);font-weight:600}
+    .detail-card .d-text{color:var(--text);margin-top:4px}
+    .detail-card .d-times{color:var(--text-dim);font-family:var(--mono);font-size:10px;margin-top:4px}
+
+    /* -- Map -- */
+    #map{width:100%;height:100%;background:var(--bg)}
+    .leaflet-container{background:var(--bg) !important}
+    .leaflet-control-attribution{display:none !important}
+    .leaflet-control-zoom a{
+      background:var(--surface) !important;color:var(--text) !important;
+      border-color:var(--border) !important;
+    }
+    .leaflet-popup-content-wrapper{
+      background:var(--surface);color:var(--text);border-radius:var(--radius);
+      border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,0.5);
+      font-size:11px;
+    }
+    .leaflet-popup-tip{background:var(--surface)}
+    .leaflet-popup-close-button{color:var(--text-dim) !important}
+    .marker-cluster{
+      background:rgba(59,130,246,0.18);border:2px solid var(--accent);
+      border-radius:50%;color:var(--text-bright);font:700 12px var(--mono);
+      display:flex;align-items:center;justify-content:center;
+    }
+
+    /* -- Bottom table -- */
+    .bottom{
+      background:var(--surface);border-top:1px solid var(--border);
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .table-bar{
+      display:flex;align-items:center;gap:10px;padding:6px 12px;
+      border-bottom:1px solid var(--border);font-size:11px;flex-shrink:0;
+    }
+    .table-bar .tb-title{font-weight:700;color:var(--text-bright);white-space:nowrap}
+    .table-bar .tb-count{font-family:var(--mono);color:var(--text-dim)}
+    .table-bar .spacer{flex:1}
+    .table-wrap{overflow:auto;flex:1}
+    table{width:100%;border-collapse:collapse;min-width:1200px}
+    th{
+      position:sticky;top:0;z-index:2;
+      background:var(--surface-2);
+      font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+      color:var(--text-dim);padding:6px 10px;text-align:left;
+      border-bottom:1px solid var(--border);white-space:nowrap;
+    }
+    td{
+      padding:5px 10px;border-bottom:1px solid var(--border);
+      font-size:11px;white-space:nowrap;font-family:var(--mono);
+      color:var(--text);vertical-align:top;
+    }
+    td.td-text{white-space:normal;max-width:340px;font-family:var(--sans)}
+    tr:hover td{background:var(--surface-2)}
+    tr.row-selected td{background:var(--accent-dim)}
+    .tag{
+      display:inline-block;padding:1px 6px;border-radius:2px;
+      font-size:10px;font-weight:700;letter-spacing:0.04em;
+    }
+    .tag-ACTIVE{background:var(--green-dim);color:var(--green)}
+    .tag-CANCELLED{background:var(--red-dim);color:var(--red)}
+    .tag-EXPIRED{background:var(--amber-dim);color:var(--amber)}
+    .empty-state{padding:30px;text-align:center;color:var(--text-dim);font-size:12px}
+
+    /* -- Countdown urgency -- */
+    .cd{font-size:10px;font-weight:700;font-family:var(--mono);padding:2px 6px;border-radius:2px;white-space:nowrap}
+    .cd-critical{background:var(--red-dim);color:var(--red)}
+    .cd-warning{background:var(--amber-dim);color:var(--amber)}
+    .cd-ok{background:var(--green-dim);color:var(--green)}
+    .cd-perm{background:rgba(139,92,246,0.14);color:#a78bfa}
+    tr.urgency-critical td:first-child{border-left:3px solid var(--red)}
+    tr.urgency-warning td:first-child{border-left:3px solid var(--amber)}
+    tr.urgency-ok td:first-child{border-left:3px solid var(--green)}
+    tr.urgency-perm td:first-child{border-left:3px solid #a78bfa}
+
+    /* -- Resize handle -- */
+    .resize-handle{
+      height:4px;cursor:row-resize;background:var(--border);flex-shrink:0;
+      transition:background 80ms;
+    }
+    .resize-handle:hover{background:var(--accent)}
+
+    /* -- Scrollbar -- */
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
+  </style>
 </head>
-
 <body>
-  <nav class="navbar navbar-collapse navbar-dark bg-dark">
-    <div class="container-fluid">
-      <div class="nav navbar-nav">
-        <a class="nav-item nav-link active">NOTAM Viewer <span class="sr-only">(current)</span></a>
-      </div>
-  </nav>
-  <div class="container-fluid bg-light" style="height:100vh;">
-    <div class="row container-fluid">
-      <div class="col-xs-1-2">
-        <div class="form-group">
-          <label for="Location Designator"></label>
-          <input type="text" class="form-control" name="" id="locationDesignator" aria-describedby="helpId"
-            placeholder="Location Designator">
+<div id="app">
+  <!-- Top bar -->
+  <header>
+    <span class="brand">FNS NOTAM INTEL</span>
+    <span class="sep"></span>
+    <span class="kv"><span class="k">DB</span><span class="v" id="hdrDbStatus"><span class="dot dot-amber"></span></span></span>
+    <span class="kv"><span class="k">Active</span><span class="v" id="hdrActiveCount">--</span></span>
+    <span class="kv"><span class="k">Mapped</span><span class="v" id="hdrMappedCount">--</span></span>
+    <span class="kv"><span class="k">Updated</span><span class="v" id="hdrLastUpdate">--</span></span>
+    <span class="spacer"></span>
+    <button class="hdr-btn" id="btnExport">Export CSV</button>
+    <button class="hdr-btn hdr-btn-accent" id="btnRefresh">Refresh</button>
+  </header>
+
+  <!-- Middle: sidebar + map -->
+  <div class="mid">
+    <aside class="sidebar">
+      <!-- KPIs -->
+      <div class="sb-section">
+        <div class="sb-title">Overview</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Total Active</div><div class="kpi-value" id="kpiTotal">--</div></div>
+          <div class="kpi"><div class="kpi-label">Locations</div><div class="kpi-value" id="kpiLocations">--</div></div>
+          <div class="kpi"><div class="kpi-label">Geo-Mapped</div><div class="kpi-value" id="kpiMapped">--</div></div>
+          <div class="kpi"><div class="kpi-label">Unmapped</div><div class="kpi-value" id="kpiUnmapped">--</div></div>
         </div>
       </div>
-      <div class="col-xs-1-2">
-        <a style="margin-top: 25px; margin-left: 25px;" name="getNotams" id="getNotams" class="btn btn-success"
-          role="button">Get Notams</a>
+
+      <!-- Classifications -->
+      <div class="sb-section">
+        <div class="sb-title">Classification Breakdown</div>
+        <div class="class-bars" id="classBars"></div>
       </div>
-      <div class="col-xs-1-4">
-        <div class="btn-group" id="notamTypeFilter" style="margin-top: 25px; margin-left: 25px;">
-          <button type="button" id="filterForALL" class="btn btn-primary active">ALL</button>
-          <button type="button" id="filterForDOM" class="btn btn-primary">DOM</button>
-          <button type="button" id="filterForINTL" class="btn btn-primary">INTL</button>
-          <button type="button" id="filterForFDC" class="btn btn-primary">FDC</button>
-          <button type="button" id="filterForMIL" class="btn btn-primary">MIL</button>
+
+      <!-- Filters -->
+      <div class="sb-section">
+        <div class="sb-title">Filters</div>
+        <div class="filter-row" style="margin-bottom:6px">
+          <input class="filter-input" id="fLocation" placeholder="ICAO code" style="flex:1">
+          <select class="filter-select" id="fClass">
+            <option value="">All classes</option>
+            <option value="DOM">DOM</option>
+            <option value="INTL">INTL</option>
+            <option value="FDC">FDC</option>
+            <option value="MIL">MIL</option>
+            <option value="LMIL">LMIL</option>
+          </select>
         </div>
-      </div>      
-      <div class="col-xs-2">
-        <a style="margin-top: 25px; margin-left: 25px;" id="download-csv" class="btn btn-success" role="button">Download
-          CSV</a>
+        <div class="filter-row" style="margin-bottom:4px">
+          <input class="filter-input" id="fSearch" placeholder="Search NOTAM text" style="flex:1">
+        </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="fShowExpired"><span class="slider"></span></label>
+          <label class="toggle-label" for="fShowExpired">Show expired NOTAMs</label>
+        </div>
+        <button class="sb-btn" id="btnApply">Apply Filters</button>
       </div>
+
+      <!-- Detail panel -->
+      <div class="sb-section" style="border-bottom:none;flex:1;min-height:0;overflow-y:auto;padding-bottom:0">
+        <div class="sb-title">Selected NOTAMs</div>
+        <div class="detail-panel" id="detailPanel">
+          <div class="detail-empty">Click a map marker or table row to inspect NOTAMs.</div>
+        </div>
+      </div>
+    </aside>
+
+    <div id="map"></div>
+  </div>
+
+  <!-- Bottom table -->
+  <div class="bottom" id="bottomPanel">
+    <div class="resize-handle" id="resizeHandle"></div>
+    <div class="table-bar">
+      <span class="tb-title">NOTAM Feed</span>
+      <span class="tb-count" id="tableCount">0 records</span>
+      <span class="spacer"></span>
     </div>
-    <div class="row container-fluid">
-      <div id="notamTable"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>FNS ID</th>
+            <th>Location</th>
+            <th>Class</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Valid From</th>
+            <th>Valid To</th>
+            <th>Accountability</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState">Waiting for data.</div>
     </div>
   </div>
-  <!-- Optional JavaScript -->
-  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
-  </script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
-  </script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <link href="https://unpkg.com/tabulator-tables@4.2.7/dist/css/tabulator.min.css" rel="stylesheet">
-  <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.2.7/dist/js/tabulator.min.js"></script>
-  <script src="jsonpath.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment.min.js"></script>
-  <script>
-    $(document).ready(function () {
+</div>
 
-      var table = new Tabulator("#notamTable", {
-        layout: "fitData",        
-        columns: [{
-            title: "NOTAM ID",
-            field: "id"
-          },
-          {
-            title: "Classification",
-            field: "classification",
-          },
-          {
-            title: "Issued",
-            field: "issued"
-          },
-          {
-            title: "Last Updated",
-            field: "lastUpdated",
-          },
-          {
-            title: "Affected FIR",
-            field: "affectedFIR",
-          },
-          {
-            title: "Location",
-            field: "location"
-          },
-          {
-            title: "Effective Start",
-            field: "effectiveStart",
-            formatter: "datetime",
-            formatterParams: {
-              inputFormat: "YYYYMMDD HH:mm",
-              outputFormat: "MM/DD/YYYY HH:mm",
-              invalidPlaceholder: "(invalid date)",
-            }
-          },
-          {
-            title: "Effective End",
-            field: "effectiveEnd",
-            formatter: "datetime",
-            formatterParams: {
-              inputFormat: "YYYYMMDD HH:mm",
-              outputFormat: "MM/DD/YYYY HH:mm",
-              invalidPlaceholder: "Permanent",
-            }
-          },
-          {
-            title: "Text",
-            field: "text",
-            formatter: "textarea"
-          },
-        ],
-      });
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  'use strict';
 
-      //trigger AJAX load on "Load Data via AJAX" button click
-      document.getElementById("getNotams").addEventListener("click", function () {
-        var locationDesignator = $("#locationDesignator").val();
-        table.setData("notamTable/" + locationDesignator);
-      });
+  // ---- State ----
+  const state = {
+    rows: [],
+    airports: {},         // ICAO -> {lat, lon, name, city, country}
+    airportsLoaded: false,
+    selectedLocation: null,
+    markers: new Map(),   // ICAO -> Leaflet marker
+    markerLayer: null,
+  };
 
-      //trigger filter for ALL
-      document.getElementById("filterForALL").addEventListener("click", function (o) {
-        $("#filterForALL").addClass("active");
-        $("#filterForDOM").removeClass("active");
-        $("#filterForINTL").removeClass("active");
-        $("#filterForFDC").removeClass("active");
-        $("#filterForMIL").removeClass("active");
-        table.clearFilter();
-      });
+  // ---- Map setup ----
+  const map = L.map('map', {
+    center: [39.5, -98.0],
+    zoom: 4,
+    zoomControl: true,
+    attributionControl: false,
+    preferCanvas: true,
+    worldCopyJump: false,
+    zoomSnap: 1,
+    zoomDelta: 1,
+    wheelDebounceTime: 100,
+    wheelPxPerZoomLevel: 120,
+    inertia: true,
+    inertiaDeceleration: 3000,
+    inertiaMaxSpeed: 1500,
+    easeLinearity: 0.25,
+    maxBounds: [[-85, -180], [85, 180]],
+    maxBoundsViscosity: 1.0,
+    bounceAtZoomLimits: false,
+  });
 
-      //trigger filter for DOM
-      document.getElementById("filterForDOM").addEventListener("click", function (o) {
-        $("#filterForALL").removeClass("active");
-        $("#filterForDOM").addClass("active");
-        $("#filterForINTL").removeClass("active");
-        $("#filterForFDC").removeClass("active");
-        $("#filterForMIL").removeClass("active");
-        table.setFilter("classification", "=", "DOM");
+  // Dark tile layer from CartoDB.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd',
+  }).addTo(map);
 
-      });
+  state.markerLayer = L.layerGroup().addTo(map);
 
-      //trigger filter for INTL
-      document.getElementById("filterForINTL").addEventListener("click", function (o) {
-        $("#filterForALL").removeClass("active");
-        $("#filterForDOM").removeClass("active");
-        $("#filterForINTL").addClass("active");
-        $("#filterForFDC").removeClass("active");
-        $("#filterForMIL").removeClass("active");
-        table.setFilter("classification", "=", "INTL");
-      });
+  // ---- FIR / ARTCC / non-airport ICAO lookups ----
+  // US ARTCCs, common FIRs, and TFR-related designators that are NOT in airports.json.
+  const FIR_COORDS = {
+    KZAB:[34.65,-106.57],KZAU:[41.88,-87.63],KZBW:[44.81,-68.83],
+    KZDC:[38.85,-77.04],KZDV:[39.74,-104.99],KZFW:[32.78,-97.35],
+    KZHU:[29.76,-95.37],KZID:[39.77,-86.16],KZJX:[33.38,-84.33],
+    KZKC:[39.30,-94.72],KZLA:[33.94,-118.41],KZLC:[40.79,-111.98],
+    KZMA:[25.80,-80.29],KZME:[35.05,-89.98],KZMP:[44.88,-93.22],
+    KZNY:[40.77,-73.87],KZOA:[37.62,-122.38],KZOB:[41.41,-81.85],
+    KZSE:[47.44,-122.30],KZTL:[33.63,-84.43],
+    PZAN:[61.17,-150.00],PZHN:[21.33,-157.92],
+    CZEG:[53.31,-113.58],CZUL:[45.47,-73.74],CZWG:[49.91,-97.24],CZVR:[49.19,-123.18],
+    CZYZ:[43.68,-79.63],
+    EGTT:[51.15,-0.18],EGPX:[55.95,-3.37],
+    LFFF:[48.80,2.50],EDGG:[50.05,8.57],EDUU:[50.87,12.64],EDMM:[48.35,11.79],
+  };
 
-      //trigger filter for FDC
-      document.getElementById("filterForFDC").addEventListener("click", function (o) {
-        $("#filterForALL").removeClass("active");
-        $("#filterForDOM").removeClass("active");
-        $("#filterForINTL").removeClass("active");
-        $("#filterForFDC").addClass("active");
-        $("#filterForMIL").removeClass("active");
-        table.setFilter("classification", "=", "FDC");
-      });
+  // ---- Airport data ----
+  async function loadAirports() {
+    try {
+      const res = await fetch('https://raw.githubusercontent.com/mwgg/Airports/master/airports.json');
+      const data = await res.json();
+      for (const [code, info] of Object.entries(data)) {
+        if (info.lat && info.lon) {
+          state.airports[code] = {
+            lat: parseFloat(info.lat),
+            lon: parseFloat(info.lon),
+            name: info.name || '',
+            city: info.city || '',
+            country: info.country || '',
+          };
+        }
+      }
+      // Merge FIR/ARTCC coords (only if not already in airports)
+      for (const [code, [lat, lon]] of Object.entries(FIR_COORDS)) {
+        if (!state.airports[code]) {
+          state.airports[code] = { lat, lon, name: code + ' Center/FIR', city: '', country: '' };
+        }
+      }
+      state.airportsLoaded = true;
+    } catch (err) {
+      console.error('Airport data load failed:', err);
+    }
+  }
 
-      //trigger filter for MIL
-      document.getElementById("filterForMIL").addEventListener("click", function (o) {
-        $("#filterForALL").removeClass("active");
-        $("#filterForDOM").removeClass("active");
-        $("#filterForINTL").removeClass("active");
-        $("#filterForFDC").removeClass("active");
-        $("#filterForMIL").addClass("active");
-        table.setFilter("classification", "like", "MIL");
-      });
+  // Resolve a location designator to coordinates.
+  // Tries exact match first, then strips trailing digits/letters for partial matches.
+  function resolveLocation(loc) {
+    if (state.airports[loc]) return state.airports[loc];
+    // Try 4-char prefix (e.g., KZDC2 -> KZDC)
+    if (loc.length > 4) {
+      const prefix4 = loc.substring(0, 4);
+      if (state.airports[prefix4]) return state.airports[prefix4];
+    }
+    // Try 3-char with K prefix (e.g., ATL -> KATL)
+    if (loc.length === 3) {
+      const kPrefixed = 'K' + loc;
+      if (state.airports[kPrefixed]) return state.airports[kPrefixed];
+    }
+    return null;
+  }
 
-      //trigger download of data.csv file
-      document.getElementById("download-csv").addEventListener("click", function () {
-        table.download("csv", "data.csv");
-      });
+  // ---- API fetching ----
+  async function fetchStatus() {
+    const res = await fetch('/api/status');
+    return res.json();
+  }
 
+  async function fetchNotams(params) {
+    const qs = new URLSearchParams(params);
+    const res = await fetch('/api/notams?' + qs.toString());
+    const data = await res.json();
+    return data.items || [];
+  }
+
+  // ---- Render status ----
+  function renderStatus(payload) {
+    const valid = payload.database_valid;
+    const initializing = payload.database_initializing;
+    const count = payload.active_notam_count || 0;
+    const counts = payload.classification_counts || {};
+
+    // Header indicators
+    const dbEl = document.getElementById('hdrDbStatus');
+    if (valid) {
+      dbEl.innerHTML = '<span class="dot dot-green"></span>';
+    } else if (initializing) {
+      dbEl.innerHTML = '<span class="dot dot-amber"></span>';
+    } else {
+      dbEl.innerHTML = '<span class="dot dot-red"></span>';
+    }
+    document.getElementById('hdrActiveCount').textContent = count.toLocaleString();
+    document.getElementById('hdrLastUpdate').textContent = formatTimeShort(new Date());
+
+    // KPIs
+    document.getElementById('kpiTotal').textContent = count.toLocaleString();
+
+    // Classification bars
+    const barsEl = document.getElementById('classBars');
+    const maxCount = Math.max(1, ...Object.values(counts));
+    const classOrder = ['DOM', 'INTL', 'FDC', 'MIL', 'LMIL'];
+    const allClasses = [...new Set([...classOrder, ...Object.keys(counts)])];
+    barsEl.innerHTML = allClasses.map(cls => {
+      const c = counts[cls] || 0;
+      const pct = (c / maxCount * 100).toFixed(1);
+      return '<div class="class-row">' +
+        '<span class="label">' + esc(cls) + '</span>' +
+        '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
+        '<span class="count">' + c.toLocaleString() + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ---- Urgency helpers ----
+  const URGENCY_CRITICAL_MS = 2 * 60 * 60 * 1000;   // 2 hours
+  const URGENCY_WARNING_MS = 12 * 60 * 60 * 1000;    // 12 hours
+
+  function getUrgency(row) {
+    if (!row.validtotimestamp) return 'perm';
+    const expires = new Date(row.validtotimestamp).getTime();
+    if (Number.isNaN(expires)) return 'perm';
+    const remaining = expires - Date.now();
+    if (remaining <= 0) return 'critical';
+    if (remaining <= URGENCY_CRITICAL_MS) return 'critical';
+    if (remaining <= URGENCY_WARNING_MS) return 'warning';
+    return 'ok';
+  }
+
+  function urgencyColor(urgency) {
+    if (urgency === 'critical') return '#ef4444';
+    if (urgency === 'warning') return '#f59e0b';
+    if (urgency === 'perm') return '#a78bfa';
+    return '#22c55e';
+  }
+
+  function urgencyBorder(urgency) {
+    if (urgency === 'critical') return '#fca5a5';
+    if (urgency === 'warning') return '#fcd34d';
+    if (urgency === 'perm') return '#c4b5fd';
+    return '#86efac';
+  }
+
+  // Worst (most urgent) urgency for a group of NOTAMs at one location
+  function worstUrgency(notams) {
+    const order = { critical: 0, warning: 1, ok: 2, perm: 3 };
+    let worst = 'perm';
+    for (const row of notams) {
+      const u = getUrgency(row);
+      if (order[u] < order[worst]) worst = u;
+    }
+    return worst;
+  }
+
+  function formatCountdown(row) {
+    if (!row.validtotimestamp) return 'PERM';
+    const expires = new Date(row.validtotimestamp).getTime();
+    if (Number.isNaN(expires)) return '--';
+    const remaining = expires - Date.now();
+    if (remaining <= 0) return 'EXPIRED';
+    const hours = Math.floor(remaining / 3600000);
+    const minutes = Math.floor((remaining % 3600000) / 60000);
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      return days + 'd ' + (hours % 24) + 'h';
+    }
+    return hours + 'h ' + minutes + 'm';
+  }
+
+  // ---- Render map markers (incremental update to avoid flicker) ----
+  function renderMap(rows) {
+    // Group NOTAMs by location designator
+    const byLocation = {};
+    for (const row of rows) {
+      const loc = (row.locationdesignator || '').toUpperCase();
+      if (!loc) continue;
+      if (!byLocation[loc]) byLocation[loc] = [];
+      byLocation[loc].push(row);
+    }
+
+    let mappedCount = 0;
+    let unmappedCount = 0;
+    const locations = Object.keys(byLocation);
+    const activeLocs = new Set(locations);
+
+    // Remove markers for locations no longer in the data
+    for (const [loc, marker] of state.markers) {
+      if (!activeLocs.has(loc)) {
+        state.markerLayer.removeLayer(marker);
+        state.markers.delete(loc);
+      }
+    }
+
+    for (const loc of locations) {
+      const airport = resolveLocation(loc);
+      if (!airport) {
+        unmappedCount += byLocation[loc].length;
+        continue;
+      }
+      mappedCount += byLocation[loc].length;
+      const count = byLocation[loc].length;
+      const radius = Math.min(Math.max(6, Math.sqrt(count) * 4), 22);
+      const urgency = worstUrgency(byLocation[loc]);
+
+      const popupContent =
+        '<div style="font:12px var(--sans,system-ui);min-width:160px">' +
+        '<div style="font-weight:700;font-size:14px;margin-bottom:2px">' + esc(loc) + '</div>' +
+        '<div style="color:var(--text-dim,#6b7a90);font-size:11px;margin-bottom:6px">' +
+          esc(airport.name) + (airport.city ? ', ' + esc(airport.city) : '') +
+        '</div>' +
+        '<div style="font-family:var(--mono,monospace);font-size:13px;font-weight:700">' +
+          count + ' active NOTAM' + (count !== 1 ? 's' : '') +
+        '</div>' +
+        '<div style="color:var(--text-dim,#6b7a90);font-size:10px;margin-top:2px">' +
+          airport.lat.toFixed(4) + ', ' + airport.lon.toFixed(4) +
+        '</div>' +
+        '</div>';
+
+      // Update existing marker in-place instead of destroying and recreating
+      const existing = state.markers.get(loc);
+      if (existing) {
+        existing.setRadius(radius);
+        existing.setStyle({
+          fillColor: urgencyColor(urgency),
+          color: urgencyBorder(urgency),
+        });
+        existing.setPopupContent(popupContent);
+      } else {
+        const marker = L.circleMarker([airport.lat, airport.lon], {
+          radius: radius,
+          fillColor: urgencyColor(urgency),
+          fillOpacity: 0.7,
+          color: urgencyBorder(urgency),
+          weight: 1.5,
+        });
+        marker.bindPopup(popupContent);
+        marker.on('click', function () {
+          selectLocation(loc, byLocation[loc]);
+        });
+        state.markerLayer.addLayer(marker);
+        state.markers.set(loc, marker);
+      }
+    }
+
+    document.getElementById('kpiLocations').textContent = locations.length.toLocaleString();
+    document.getElementById('kpiMapped').textContent = mappedCount.toLocaleString();
+    document.getElementById('kpiUnmapped').textContent = unmappedCount.toLocaleString();
+    document.getElementById('hdrMappedCount').textContent = mappedCount.toLocaleString();
+  }
+
+  // ---- Select a location ----
+  function selectLocation(loc, notams) {
+    state.selectedLocation = loc;
+    const panel = document.getElementById('detailPanel');
+    if (!notams || !notams.length) {
+      panel.innerHTML = '<div class="detail-empty">No NOTAMs at this location.</div>';
+      return;
+    }
+    panel.innerHTML = notams.map(row => {
+      const cls = (row.classification || '').toUpperCase();
+      const urgency = getUrgency(row);
+      const cd = formatCountdown(row);
+      return '<div class="detail-card">' +
+        '<div class="d-header">' +
+          '<span class="d-id">' + esc(String(row.fnsid || '')) + '</span>' +
+          '<span class="cd cd-' + urgency + '">' + esc(cd) + '</span>' +
+          '<span class="d-class d-class-' + esc(cls) + '">' + esc(cls || '--') + '</span>' +
+        '</div>' +
+        '<div class="d-loc">' + esc(loc) + '</div>' +
+        '<div class="d-text">' + esc(row.notamtext || '') + '</div>' +
+        '<div class="d-times">' +
+          formatTimeCompact(row.validfromtimestamp) + ' -> ' +
+          formatTimeCompact(row.validtotimestamp) +
+        '</div>' +
+        '</div>';
+    }).join('');
+
+    // Highlight table rows
+    highlightTableRows(loc);
+  }
+
+  function highlightTableRows(loc) {
+    const rows = document.querySelectorAll('#tableBody tr');
+    for (const tr of rows) {
+      if (tr.dataset.loc === loc) {
+        tr.classList.add('row-selected');
+      } else {
+        tr.classList.remove('row-selected');
+      }
+    }
+  }
+
+  // ---- Render table ----
+  function renderTable(rows) {
+    const body = document.getElementById('tableBody');
+    const empty = document.getElementById('emptyState');
+    const countEl = document.getElementById('tableCount');
+
+    if (!rows.length) {
+      body.innerHTML = '';
+      empty.style.display = 'block';
+      countEl.textContent = '0 records';
+      return;
+    }
+
+    // Sort by valid_to: soonest expiry first, PERMs last
+    const sorted = [...rows].sort((a, b) => {
+      const aTime = a.validtotimestamp ? new Date(a.validtotimestamp).getTime() : Infinity;
+      const bTime = b.validtotimestamp ? new Date(b.validtotimestamp).getTime() : Infinity;
+      return aTime - bTime;
     });
-  </script>
-</body>
 
+    empty.style.display = 'none';
+    countEl.textContent = sorted.length.toLocaleString() + ' records';
+
+    body.innerHTML = sorted.map(row => {
+      const loc = (row.locationdesignator || '').toUpperCase();
+      const cls = (row.classification || '').toUpperCase();
+      const status = (row.status || '').toUpperCase();
+      const urgency = getUrgency(row);
+      const cd = formatCountdown(row);
+      return '<tr data-loc="' + esc(loc) + '" class="urgency-' + urgency + '">' +
+        '<td>' + esc(String(row.fnsid ?? '')) + '</td>' +
+        '<td>' + esc(loc) + '</td>' +
+        '<td><span class="d-class d-class-' + esc(cls) + '">' + esc(cls) + '</span></td>' +
+        '<td><span class="tag tag-' + esc(status) + '">' + esc(status) + '</span></td>' +
+        '<td><span class="cd cd-' + urgency + '">' + esc(cd) + '</span></td>' +
+        '<td>' + esc(formatTimeCompact(row.validfromtimestamp)) + '</td>' +
+        '<td>' + esc(formatTimeCompact(row.validtotimestamp)) + '</td>' +
+        '<td>' + esc(row.notamaccountability || '') + '</td>' +
+        '<td class="td-text">' + esc(row.notamtext || '') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    // Click to select
+    for (const tr of body.querySelectorAll('tr')) {
+      tr.addEventListener('click', function () {
+        const loc = this.dataset.loc;
+        const locRows = state.rows.filter(r => (r.locationdesignator || '').toUpperCase() === loc);
+        selectLocation(loc, locRows);
+        // Pan map if marker exists
+        const marker = state.markers.get(loc);
+        if (marker) {
+          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 8), { animate: true, duration: 0.3 });
+          marker.openPopup();
+        }
+      });
+    }
+  }
+
+  // ---- Full refresh ----
+  async function refresh() {
+    const params = buildFilterParams();
+    const [statusData, rows] = await Promise.all([fetchStatus(), fetchNotams(params)]);
+    state.rows = rows;
+    renderStatus(statusData);
+
+    // Apply text search client-side
+    const filtered = applyClientFilters(rows);
+    renderMap(filtered);
+    renderTable(filtered);
+  }
+
+  function buildFilterParams() {
+    const params = {};
+    const loc = document.getElementById('fLocation').value.trim().toUpperCase();
+    const cls = document.getElementById('fClass').value;
+    if (loc) params.location_designator = loc;
+    if (cls) params.classification = cls;
+    params.limit = '10000';
+    return params;
+  }
+
+  function applyClientFilters(rows) {
+    const search = document.getElementById('fSearch').value.trim().toLowerCase();
+    const showExpired = document.getElementById('fShowExpired').checked;
+    return rows.filter(r => {
+      // Hide expired NOTAMs unless the toggle is on
+      if (!showExpired) {
+        const status = (r.status || '').toUpperCase();
+        if (status === 'CANCELLED' || status === 'EXPIRED') return false;
+        if (r.validtotimestamp) {
+          const expires = new Date(r.validtotimestamp).getTime();
+          if (!Number.isNaN(expires) && expires < Date.now()) return false;
+        }
+      }
+      // Text search
+      if (search) {
+        const text = (r.notamtext || '').toLowerCase();
+        const loc = (r.locationdesignator || '').toLowerCase();
+        if (!text.includes(search) && !loc.includes(search)) return false;
+      }
+      return true;
+    });
+  }
+
+  // ---- Date formatting ----
+  function formatTimeCompact(value) {
+    if (!value) return 'PERM';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    const yy = d.getUTCFullYear();
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mn = String(d.getUTCMinutes()).padStart(2, '0');
+    return yy + '-' + mm + '-' + dd + ' ' + hh + ':' + mn + 'Z';
+  }
+
+  function formatTimeShort(d) {
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    const ss = String(d.getUTCSeconds()).padStart(2, '0');
+    return hh + ':' + mm + ':' + ss + 'Z';
+  }
+
+  // ---- Escaping ----
+  function esc(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // ---- CSV export ----
+  function downloadCsv() {
+    if (!state.rows.length) return;
+    const cols = [
+      'fnsid','classification','locationdesignator','notamaccountability',
+      'issuedtimestamp','updatedtimestamp','validfromtimestamp','validtotimestamp',
+      'status','notamtext',
+    ];
+    const lines = [cols.join(',')];
+    for (const row of state.rows) {
+      lines.push(cols.map(c => {
+        const t = String(row[c] ?? '');
+        return '"' + t.replace(/"/g, '""') + '"';
+      }).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'notams_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ---- Resize handle for bottom panel ----
+  (function () {
+    const handle = document.getElementById('resizeHandle');
+    const appEl = document.getElementById('app');
+    let dragging = false;
+    let startY = 0;
+    let startH = 0;
+
+    handle.addEventListener('mousedown', function (e) {
+      dragging = true;
+      startY = e.clientY;
+      startH = document.getElementById('bottomPanel').offsetHeight;
+      document.body.style.cursor = 'row-resize';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      const delta = startY - e.clientY;
+      const newH = Math.max(80, Math.min(startH + delta, window.innerHeight - 200));
+      appEl.style.gridTemplateRows = '40px 1fr ' + newH + 'px';
+      map.invalidateSize();
+    });
+
+    document.addEventListener('mouseup', function () {
+      if (dragging) {
+        dragging = false;
+        document.body.style.cursor = '';
+        map.invalidateSize();
+      }
+    });
+  })();
+
+  // ---- Events ----
+  document.getElementById('btnRefresh').addEventListener('click', refresh);
+  document.getElementById('btnExport').addEventListener('click', downloadCsv);
+  document.getElementById('btnApply').addEventListener('click', refresh);
+  document.getElementById('fShowExpired').addEventListener('change', refresh);
+  document.getElementById('fSearch').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') refresh();
+  });
+  document.getElementById('fLocation').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') refresh();
+  });
+
+  // ---- Auto-refresh every 30s ----
+  setInterval(refresh, 30000);
+
+  // ---- Update countdown badges every 15s without full refetch ----
+  setInterval(function () {
+    // Update table countdown cells
+    var trs = document.querySelectorAll('#tableBody tr');
+    for (var i = 0; i < trs.length; i++) {
+      var tr = trs[i];
+      var loc = tr.dataset.loc;
+      // Find the matching row from state
+      // For performance, just update the countdown cell (5th td, index 4)
+      var tds = tr.querySelectorAll('td');
+      if (tds.length < 5) continue;
+      // We need to use the row data -- match by fnsid in first td
+      var fnsid = tds[0].textContent;
+      var row = state.rows.find(function (r) { return String(r.fnsid) === fnsid; });
+      if (!row) continue;
+      var urgency = getUrgency(row);
+      var cd = formatCountdown(row);
+      tds[4].innerHTML = '<span class="cd cd-' + urgency + '">' + esc(cd) + '</span>';
+      tr.className = tr.className.replace(/urgency-\w+/g, '') + ' urgency-' + urgency;
+    }
+  }, 15000);
+
+  // ---- Boot ----
+  loadAirports().then(refresh);
+})();
+</script>
+</body>
 </html>

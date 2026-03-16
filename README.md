@@ -1,54 +1,229 @@
-# SWIM FNS JMS Reference Implementation (FnsClient)
+# FNS NOTAM Client
+
+> **A [JS Labs](https://labs.jamessawyer.co.uk/) Prototype**
+
+---
+
+## DISCLAIMER
+
+**THIS PROJECT IS NOT AN OFFICIAL PRODUCT OF, ENDORSED BY, AFFILIATED WITH, OR IN ANY WAY ASSOCIATED WITH THE UNITED STATES GOVERNMENT, THE FEDERAL AVIATION ADMINISTRATION (FAA), THE DEPARTMENT OF TRANSPORTATION (DOT), THE SWIM PROGRAM OFFICE, SOLACE CORPORATION, OR ANY OTHER GOVERNMENT AGENCY OR CONTRACTOR.**
+
+**THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.**
+
+**DO NOT USE THIS SOFTWARE FOR OPERATIONAL AVIATION DECISIONS. NOTAM DATA DISPLAYED BY THIS CLIENT MAY BE INCOMPLETE, DELAYED, OR INCORRECT. ALWAYS CONSULT OFFICIAL FAA SOURCES FOR FLIGHT-CRITICAL INFORMATION.**
+
+**NO WARRANTIES ARE GIVEN. USE ENTIRELY AT YOUR OWN RISK.**
+
+---
+
+## Why This Exists
+
+The FAA publishes live NOTAM data through its SWIM (System Wide Information Management) program. The official reference client is a Java desktop application designed for Windows and Linux. It works, but:
+
+- It requires a local Java runtime and Solace JMS libraries.
+- It has no browser-based UI, no map view, and no REST API.
+- Running it on macOS means wrestling with cross-platform Java tooling that has not been updated for modern workflows.
+
+This project is a **ground-up Python reimplementation** of that reference client, purpose-built for:
+
+- **macOS and Docker** -- no JVM, no cross-platform Java hassle.
+- **A browser-based NOC-style dashboard** with live map, NOTAM table, filtering, CSV export, and urgency countdowns.
+- **A clean REST API** so downstream tools can query NOTAM data programmatically.
+- **Deterministic replay mode** for local development and demos without live SWIM credentials.
+- **Modern Python** (3.11+) with FastAPI, SQLAlchemy, and a minimal container footprint.
+
+This is a prototype for personal use and experimentation. It is not intended to replace or compete with any official FAA tooling.
+
+---
+
+## Author
+
+**James Sawyer**
+[https://labs.jamessawyer.co.uk/](https://labs.jamessawyer.co.uk/)
+
+---
+
 ## Overview
 
-The System Wide Information Service (SWIM) Federal NOTAM System (FNS) Java Messaging Service (JMS) Reference Implementation (FnsClient) provides an example implementation on how to establish and maintain a local instance of the FNS NOTAM Database through the use of the FNS Initial Load (FIL) and SWIM FNS JMS services. FIL provides all active NOTAMS, via SFTP, that is required to initialize a NOTAM database and the SWIM JMS service provides, via JMS, NOTAM updates to keep the NOTAM database current. FIL also provides for re-initialization of a NOTAM database in the case of JMS service interruption.
+This repository runs as a native Python client with one operator workflow:
 
-![FnsClient Diagram](https://github.com/faa-swim/fns-client/blob/v1.0/FnsClient%20Diagram.png?raw=true)
+1. Copy `src/main/resources/fnsClient.conf.example` to `src/main/resources/fnsClient.conf` and fill in your SWIM credentials.
+2. Start the stack with `./run_local_stack.sh`.
+3. Open `http://localhost:8080`.
 
-## Contents
+The service supports two modes through the config file:
 
-This repository includes the java source code for the FnsClient which consists of the following classes:
+- `runtime.mode="replay"` for deterministic local startup using bundled XML.
+- `runtime.mode="live"` for real SWIM JMS and FIL ingestion using the credentials you place in `fnsClient.conf`.
 
-  - **FnsClient:** Main entry for the application. 
-  - **FilClient:** Obtains the FIL file via SFTP.
-  - **NotamDb:** Provides all methods to create, put, and query the NOTAM database; supports PostgreSQL and prototype H2 db. Recommend use of Postgresql DB.
-  - **FnsJmsMessageWorker:** Implementation of a JMS Message Worker used to process FNS Messages received from the SWIM AIM FNS JMS service and load into the NOTAM Database.
-  - **FnsMessage:** Provides methods to marshal and unmarshal AIXM NOTAMs into a workable java object.
-  - **FnsRestApi:** Implementation of a basic REST API to query the NOTAM Database.
+If FIL is not configured yet, live mode starts in JMS-only mode so the service can still come up and ingest new traffic.
 
-## Prerequisites
+## Configuration
 
-A SWIM subscription to the AIM FNS JMS service and credentials to access the AIM FIL service are required to run the FnsClient. These can be obtained via the SWIM Cloud Distribution Service (SCDS) by visiting [scds.faa.gov](https://scds.faa.gov), creating an account, and requesting a subscription for the AIM FNS service. In order for the FnsClient to run properly it is necessary to set up an AIM FNS subscription that receives all messages - any filters limiting which messages are received will cause the FnsClient to falsely identify missed messages. Once the subscription has been approved you will receive an email with instructions on how to request FIL credentials.
-  - Built using JDK 11 and Maven
+All operator-editable settings are in `src/main/resources/fnsClient.conf`.
 
-## Building and Running
+A template with placeholder values is provided at `src/main/resources/fnsClient.conf.example`. Copy it and fill in your SWIM credentials:
 
-  1. Clone this repository including submodules
-  	 - git clone --recurse-submodules https://github.com/faa-swim/fns-client
-  	 - cd fns-client
-  2. Install submodule dependencies to your local maven repo
-     - mvn clean install -f ./aixm-5.1/pom.xml
-     - mvn clean install -f ./jms-client/pom.xml
-     - mvn clean install -f ./swim-utilities/pom.xml
-  3. Run mvn clean package
-  4. Change to the target directory; cd target/FnsClient
-  5. Modify the fnsClient.conf file and add the SWIM AIM FNS JMS and FIL connection details
-    - FIL Cert needs to be in RSA (aka pem) format; conversion can been done via: ssh-keygen -p -N "" -m pem -f /path/to/key’
-  6. Run the FnsClient; java -jar FnsClient.jar
+```bash
+cp src/main/resources/fnsClient.conf.example src/main/resources/fnsClient.conf
+```
 
+Important fields:
 
+- `runtime.mode`
+- `runtime.replayPath`
+- `jms.enabled`
+- `jms.providerUrl`
+- `jms.username`
+- `jms.password`
+- `jms.solace.messageVpn`
+- `jms.connectionFactory`
+- `jms.destination`
+- `fil.sftp.host`
+- `fil.sftp.username`
+- `fil.sftp.certFilePath`
+- `notamDb.connectionUrl`
 
-## Rest API - Prototype 
+**Never commit `fnsClient.conf` to version control.** It is gitignored by default. The example template is safe to commit.
 
-Once the FnsClient has started and initialized, NOTAMS can be queried directly from the NOTAM database, via calling the rest api, or by the web ui as localhost:8080
+FIL private key requirement:
 
-There is an initial REST API implementation - but it is not fully functional.
+```bash
+ssh-keygen -p -N "" -m pem -f /path/to/key
+```
 
-The target REST API includes the following web services - but again requires some javascript code modifications to run properly:
+Mount the converted PEM file under `./secrets/` and point `fil.sftp.certFilePath` at that container path.
 
-  - Query by Location Designator; e.g. ATL | wget http://localhost:8080/locationDesignator/{id}
-  - Query by Classification; e.g. DOM | wget http://localhost:8080/classification/{classification}
-  - Query by Delta Time | wget http://localhost:8080/delta/{YYYY-mm-DD HH:MM:SS}
-  - Query by Time Range | wget http://localhost:8080/timerange/{YYYY-mm-DD HH:MM:SS}/{YYYY-mm-DD HH:MM:SS}
-  - Query All NOTAMS | wget http://localhost:8080/allNotams
+## Local Stack
+
+Start everything locally:
+
+```bash
+./run_local_stack.sh
+```
+
+Included services:
+
+- Native Python FNS client
+- PostgreSQL backing store
+- Browser UI served by the Python API
+- Replay XML sample data for deterministic local startup
+
+## Browser UI
+
+Open:
+
+```text
+http://localhost:8080
+```
+
+Available features:
+
+- Status dashboard with live KPIs
+- Interactive dark-theme NOTAM map with urgency-coloured markers
+- Location designator filtering
+- Classification filtering
+- Full-text NOTAM search
+- CSV export
+- Health endpoint for diagnostics
+
+## API
+
+JSON endpoints:
+
+- `GET /api/status`
+- `GET /api/notams`
+- `GET /health`
+
+Legacy compatibility endpoints:
+
+- `GET /locationDesignator/{id}`
+- `GET /classification/{classification}`
+- `GET /delta/{YYYY-mm-DD HH:MM:SS}`
+- `GET /timerange/{YYYY-mm-DD HH:MM:SS}/{YYYY-mm-DD HH:MM:SS}`
+- `GET /allNotams`
+- `GET /notamTable/{id}`
+
+## Requirements
+
+- macOS (primary target) or any Docker-capable host
+- Docker Desktop
+- Python 3.11+ (for local development outside Docker)
+
+## Testing
+
+```bash
+python3 -m pytest -q
+```
+
+## License
+
+Apache 2.0. See [LICENSE](LICENSE) for details.
+
+---
+
+## Changelog
+
+### v2.0.0 -- Python rewrite (2026-03-16)
+
+Complete ground-up reimplementation. The original Java/Maven reference client has been replaced with a native Python stack.
+
+#### What changed from the original Java version
+
+**Removed:**
+- All Java source code (`src/main/java/us/dot/faa/swim/fns/`)
+- Maven build system (`pom.xml`)
+- Git submodules (`aixm-5.1`, `swim-utilities`, `jms-client`)
+- FnsClient Diagram image
+- `.gitmodules`
+
+**Added -- Python service (`fns_client/`):**
+- `config.py` -- loads the existing `fnsClient.conf` format, no config migration needed
+- `transport.py` -- Solace JCSMP/JMS consumer reimplemented on `solace-pubsubplus`
+- `fil.py` -- FIL SFTP poller reimplemented on `paramiko`
+- `parser.py` -- AIXM XML-to-dict NOTAM parser using `xmltodict`
+- `messages.py` -- message dispatch and deduplication
+- `database.py` -- PostgreSQL NOTAM store using SQLAlchemy + `psycopg`
+- `missed_tracker.py` -- stale/missed message detection
+- `determinism.py` -- centralized seed management for replay mode
+- `rest_api.py` -- FastAPI REST API with JSON and legacy-compatible endpoints
+- `service.py` -- top-level service orchestrator
+- `logging_utils.py` -- coloured structured logging via `colorlog`
+
+**Added -- browser UI (`public/index.html`):**
+- Dark-theme NOC-style single-page dashboard
+- Live Leaflet map with ~60,000 ICAO airport locations + FIR/ARTCC lookups
+- Urgency-coloured markers (critical/warning/ok/permanent)
+- NOTAM table sorted by expiry with live countdown badges
+- Sidebar with KPIs, classification breakdown bars, and detail panel
+- ICAO code, classification, and full-text search filters
+- Show/hide expired NOTAMs toggle
+- CSV export
+- Resizable table panel
+
+**Added -- infrastructure:**
+- `Dockerfile` -- Python 3.14-slim container
+- `docker-compose.yml` -- two-service stack (app + PostgreSQL 18)
+- `run_local_stack.sh` -- single-command local startup
+- `pyproject.toml` -- modern Python packaging with ruff linting config
+- `requirements.txt` / `requirements-stable.txt`
+- `tests/` -- pytest suite for config, database, messages, and service
+- `src/main/resources/fnsClient.conf.example` -- safe credential-free template
+
+**Added -- production readiness:**
+- Comprehensive `.gitignore` covering Python, Docker data, secrets, IDE files
+- Credential file (`fnsClient.conf`) removed from git tracking
+- `START_HERE.txt` gitignored (contains operator-specific credentials)
+- `secrets/` directory gitignored
+- README with full disclaimer, author attribution, and JS Labs branding
+
+**Changed -- map stability:**
+- Incremental marker updates instead of clear-and-rebuild on every refresh
+- Replaced `flyTo` animation with `setView` for predictable panning
+- Integer zoom steps instead of half-zoom (no more jitter)
+- Tighter world bounds with inertia damping (no erratic edge-jumping)
+
+---
+
+*JS Labs Prototype -- no warranties given. Not for operational use.*
 

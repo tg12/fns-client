@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:18.3-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fns
+      POSTGRES_USER: fns
+      POSTGRES_PASSWORD: fns
+    volumes:
+      - ./docker/postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fns -d fns"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  fns-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./src/main/resources/fnsClient.conf:/app/src/main/resources/fnsClient.conf:ro
+      - ./docker/replay-data:/app/docker/replay-data:ro
+      - ./secrets:/app/secrets:ro
+      - ./docker/fil-cache:/app/docker/fil-cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10

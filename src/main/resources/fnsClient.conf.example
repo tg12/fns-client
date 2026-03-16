@@ -1,5 +1,5 @@
 ## runtime config
-runtime.mode="live"
+runtime.mode="replay"
 runtime.replayPath="docker/replay-data"
 runtime.deterministicSeed=7
 runtime.validateOnStartup=false
@@ -9,17 +9,18 @@ logging.level="INFO"
 
 ## jms config
 ## set runtime.mode="live" and jms.enabled=true to consume the real SWIM AIM FNS stream
-jms.enabled=true
+## register for SWIM credentials at https://www.faa.gov/air_traffic/technology/swim
+jms.enabled=false
 jms.initialContextFactory="com.solacesystems.jndi.SolJNDIInitialContextFactory"
 jms.providerUrl="tcps://ems1.swim.faa.gov:55443"
-jms.username="sawyer12.gmail.com"
-jms.password="fB4vlvnCTCKZmmQ6iN_QoQ"
+jms.username="YOUR_SWIM_USERNAME"
+jms.password="YOUR_SWIM_PASSWORD"
 jms.solace.messageVpn="AIM_FNS"
 jms.solace.sslTrustStore=""
 jms.solace.validateCertificate=false
 jms.solace.jndiConnectionRetries=-1
-jms.connectionFactory="sawyer12.gmail.com.CF"
-jms.destination="sawyer12.gmail.com.AIM_FNS.d53c4481-0786-4329-9ef1-af73e0cafa5a.OUT"
+jms.connectionFactory="YOUR_CONNECTION_FACTORY"
+jms.destination="YOUR_QUEUE_DESTINATION"
 jms.messageProcessor.processingThreads=4
 
 ## fil config

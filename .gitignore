@@ -1,12 +1,56 @@
-/target/
+# -- Python --
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# -- Virtual environments --
+.venv/
+venv/
+env/
+
+# -- Testing / linting caches --
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# -- IDE / editor --
 .vscode/
+.idea/
 .settings/
-./logs
+*.swp
+*.swo
+*~
 .classpath
 .project
+*.factorypath
+.DS_Store
+
+# -- Docker persistent data (generated locally) --
+/docker/fil-cache/
+/docker/postgres-data/
+
+# -- Secrets and credentials (NEVER commit) --
+/secrets/
+src/main/resources/fnsClient.conf
+
+# -- Operator-specific files --
+START_HERE.txt
+
+# -- Logs and databases --
+logs/
+*.log
 *.gz
 *.db
+*.sqlite3
+
+# -- Legacy Java artefacts --
+/target/
 *.lock
-*.project
-*.factorypath
-*.log
