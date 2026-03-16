@@ -257,6 +257,12 @@ Complete ground-up reimplementation. The original Java/Maven reference client ha
 - Integer zoom steps instead of half-zoom (no more jitter)
 - Tighter world bounds with inertia damping (no erratic edge-jumping)
 
+## Acknowledgements
+
+- **Airport data** -- ICAO airport locations (~60,000 entries) sourced from
+  [mwgg/Airports](https://github.com/mwgg/Airports). Thank you for maintaining
+  such a comprehensive open dataset.
+
 ---
 
 *JS Labs Prototype by [James Sawyer](https://labs.jamessawyer.co.uk/) -- provided "as is" with no warranties of any kind. Not for operational aviation use.*

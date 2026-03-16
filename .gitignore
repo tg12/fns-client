@@ -43,6 +43,8 @@ src/main/resources/fnsClient.conf
 
 # -- Operator-specific files --
 START_HERE.txt
+reddit_post.txt
+github_issue_mwgg.txt
 
 # -- Logs and databases --
 logs/
