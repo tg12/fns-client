@@ -1,3 +1,7 @@
+# ARCHIVED — project superseded by phantom-tide/ (PostGIS + ClickHouse)
+# This file is kept for reference only. Do not edit.
+# Migration date: 2026-03-19
+
 # FNS NOTAM Client -- A JS Labs Prototype
 # Copyright (c) 2026 James Sawyer
 # https://labs.jamessawyer.co.uk/ | https://github.com/tg12
@@ -10,7 +14,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote_plus
@@ -308,11 +312,14 @@ class NotamDb:
         valid_from: datetime | None = None,
         valid_to: datetime | None = None,
         limit: int = 5000,
+        include_archived: bool = False,
     ) -> list[dict[str, Any]]:
-        """Return filtered NOTAM rows as dictionaries for the web UI and JSON API."""
-
-        # Build filters incrementally so every query path uses the same
-        # deterministic ordering.
+        """Return filtered NOTAM rows as dictionaries for the web UI and JSON API.
+        By default, only returns NOTAMs that are active and started within the last 24 hours.
+        Set include_archived=True to include expired/old NOTAMs.
+        """
+        now = datetime.now(UTC)
+        twenty_four_hours_ago = now.replace(microsecond=0) - timedelta(hours=24)
         conditions: list[ColumnElement[bool]] = [self._active_notam_clause()]
         if location_designator:
             conditions.append(self._table.c.locationdesignator == location_designator)
@@ -320,6 +327,9 @@ class NotamDb:
             conditions.append(self._table.c.classification == classification)
         if updated_since is not None:
             conditions.append(self._table.c.updatedtimestamp >= updated_since)
+        if not include_archived:
+            # Only show NOTAMs that started within the last 24 hours
+            conditions.append(self._table.c.validfromtimestamp >= twenty_four_hours_ago)
         if valid_from is not None:
             conditions.append(self._table.c.validfromtimestamp >= valid_from)
         if valid_to is not None:

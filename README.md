@@ -167,7 +167,29 @@ JSON endpoints:
 
 - `GET /api/status`
 - `GET /api/notams`
+- `GET /api/notams/intelligence`
 - `GET /health`
+
+`/api/notams/intelligence` returns the same active NOTAM set enriched with:
+
+- rules-based operational category classification
+- severity ranking (`CRITICAL`, `WARNING`, `ADVISORY`, `INFO`, `NOISE`)
+- low-signal noise filtering
+- plain-English summaries for the raw NOTAM text
+- summary counts by severity and category
+
+Useful query parameters:
+
+- `location_designator`
+- `classification`
+- `updated_since`
+- `valid_from`
+- `valid_to`
+- `limit`
+- `include_noise=true|false`
+- `min_severity=INFO|ADVISORY|WARNING|CRITICAL`
+
+`/api/notams` also supports `include_intelligence=true` when you want the extra intelligence block inline with each row but do not need the ranked summary envelope.
 
 Legacy compatibility endpoints:
 
@@ -177,6 +199,84 @@ Legacy compatibility endpoints:
 - `GET /timerange/{YYYY-mm-DD HH:MM:SS}/{YYYY-mm-DD HH:MM:SS}`
 - `GET /allNotams`
 - `GET /notamTable/{id}`
+
+## Data Sources and Documentation
+
+This project consumes data from multiple upstream systems. Use these links for
+official reference, onboarding, and troubleshooting.
+
+### NOTAM data
+
+- FAA SWIM program overview:
+  https://www.faa.gov/air_traffic/technology/swim
+- FAA NOTAM official portal:
+  https://notams.aim.faa.gov/
+
+### Aircraft data
+
+- OpenSky REST API documentation:
+  https://openskynetwork.github.io/opensky-api/rest.html
+- OpenSky states endpoint used by the poller:
+  https://opensky-network.org/api/states/all
+
+### OpenSky OAuth setup
+
+OpenSky now expects OAuth2 client credentials for authenticated REST access.
+
+To configure this stack locally:
+
+1. Copy `.env.example` to `.env` in the repository root.
+2. Set `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` in `.env`.
+3. Restart the stack with `./run_local_stack.sh`.
+
+The poller will automatically:
+
+- request and cache a bearer token
+- refresh it before expiry
+- use that token for `/api/states/all`
+- fall back to anonymous access only if no client credentials are configured
+
+To verify authenticated mode and watch rate-limit headroom, inspect:
+
+- `http://127.0.0.1:8080/api/aircraft/metrics`
+
+Useful fields in the metrics response:
+
+- `auth_mode` should be `oauth2`
+- `last_rate_limit_remaining` shows remaining OpenSky credits when the header is present
+- `last_retry_after_seconds` shows server-requested backoff after rate limiting
+- `estimated_daily_calls` gives a rough local usage estimate
+
+### Local OpenSky cache and archive
+
+The poller keeps a durable local copy of OpenSky data on the mounted volume at:
+
+- `./data/opensky/raw/` for compressed raw upstream payloads
+- `./data/opensky/sqlite/opensky_cache.sqlite3` for indexed current state and history
+
+Read-only API surfaces are available from the main app:
+
+- `GET /api/aircraft/cache/batches?limit=50`
+  Returns recent poll batch metadata, including auth mode, status, credit cost, aircraft count, and archived payload availability.
+- `GET /api/aircraft/cache/current?limit=500&visibility_status=seen`
+  Returns locally cached aircraft with lifecycle metadata and the latest normalized state payload.
+- `GET /api/aircraft/cache/history/{icao24}?limit=250`
+  Returns persisted state-change and visibility history for one aircraft.
+- `GET /api/aircraft/cache/raw/{batch_id}`
+  Returns the archived raw OpenSky JSON payload for one poll batch.
+
+These same endpoints are also exposed directly by the poller on port `8081` under `/api/cache/...`.
+
+### Airport geolocation reference
+
+- Airport dataset repository:
+  https://github.com/mwgg/Airports
+- Raw airports JSON used by the dashboard:
+  https://raw.githubusercontent.com/mwgg/Airports/master/airports.json
+
+For refresh timing and where each source enters the pipeline, see:
+
+- `docs/data-update-flow.md`
 
 ## Requirements
 
@@ -266,4 +366,3 @@ Complete ground-up reimplementation. The original Java/Maven reference client ha
 ---
 
 *JS Labs Prototype by [James Sawyer](https://labs.jamessawyer.co.uk/) -- provided "as is" with no warranties of any kind. Not for operational aviation use.*
-

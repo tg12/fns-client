@@ -22,6 +22,11 @@ COPY README.md ./README.md
 # Install the package so the entrypoint runs exactly like the local environment.
 RUN pip install --no-cache-dir . --upgrade
 
+# Remove build tools to reduce image size
+RUN apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
 # Expose the browser UI and API port.
 EXPOSE 8080
 

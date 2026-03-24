@@ -1,3 +1,7 @@
+# ARCHIVED — REST API still required as phantom-tide NOTAM data source (NOTAM_REST_URL)
+# This file is kept for reference only. Do not edit.
+# Migration date: 2026-03-19
+
 # FNS NOTAM Client -- A JS Labs Prototype
 # Copyright (c) 2026 James Sawyer
 # https://labs.jamessawyer.co.uk/ | https://github.com/tg12
@@ -96,9 +100,7 @@ class SolaceMessageSource(MessageSource):
                     )
                     self._messaging_service.connect()
                     queue = Queue.durable_exclusive_queue(self._config.destination)
-                    builder = (
-                        self._messaging_service.create_persistent_message_receiver_builder()
-                    )
+                    builder = self._messaging_service.create_persistent_message_receiver_builder()
                     self._receiver = builder.build(queue)
                     self._receiver.start()
                     LOGGER.info(

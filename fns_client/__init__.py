@@ -1,3 +1,8 @@
+# ARCHIVED — NOTAM intelligence logic migrated to phantom-tide/collectors/notam/notam_collector.py
+# fns-client REST API still required as a data source for phantom-tide (NOTAM_REST_URL)
+# This file is kept for reference only. Do not edit.
+# Migration date: 2026-03-19
+
 # FNS NOTAM Client -- A JS Labs Prototype
 # Copyright (c) 2026 James Sawyer
 # https://labs.jamessawyer.co.uk/ | https://github.com/tg12

@@ -45,6 +45,14 @@
         <a style="margin-top: 25px; margin-left: 25px;" id="download-csv" class="btn btn-success" role="button">Download
           CSV</a>
       </div>
+      <div class="col-xs-2">
+        <div class="form-check" style="margin-top: 35px; margin-left: 25px;">
+          <input class="form-check-input" type="checkbox" value="" id="toggleArchived">
+          <label class="form-check-label" for="toggleArchived">
+            Show Archived/Old NOTAMs
+          </label>
+        </div>
+      </div>
     </div>
     <div class="row container-fluid">
       <div id="notamTable"></div>
@@ -69,65 +77,83 @@
   <script>
     $(document).ready(function () {
 
+      // Color palette for airport groups
+      var airportColors = {};
+      var colorPalette = [
+        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6',
+        '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3',
+        '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'
+      ];
+      var colorIndex = 0;
+
       var table = new Tabulator("#notamTable", {
-        layout: "fitData",        
-        columns: [{
-            title: "NOTAM ID",
-            field: "id"
-          },
-          {
-            title: "Classification",
-            field: "classification",
-          },
-          {
-            title: "Issued",
-            field: "issued"
-          },
-          {
-            title: "Last Updated",
-            field: "lastUpdated",
-          },
-          {
-            title: "Affected FIR",
-            field: "affectedFIR",
-          },
-          {
-            title: "Location",
-            field: "location"
-          },
-          {
-            title: "Effective Start",
-            field: "effectiveStart",
-            formatter: "datetime",
-            formatterParams: {
-              inputFormat: "YYYYMMDD HH:mm",
-              outputFormat: "MM/DD/YYYY HH:mm",
-              invalidPlaceholder: "(invalid date)",
-            }
-          },
-          {
-            title: "Effective End",
-            field: "effectiveEnd",
-            formatter: "datetime",
-            formatterParams: {
-              inputFormat: "YYYYMMDD HH:mm",
-              outputFormat: "MM/DD/YYYY HH:mm",
-              invalidPlaceholder: "Permanent",
-            }
-          },
-          {
-            title: "Text",
-            field: "text",
-            formatter: "textarea"
-          },
+        layout: "fitData",
+        groupBy: "location",
+        groupHeader: function(value, count, data, group) {
+          // Assign a color to each airport group
+          if (!airportColors[value]) {
+            airportColors[value] = colorPalette[colorIndex % colorPalette.length];
+            colorIndex++;
+          }
+          return "Airport: " + value + " (" + count + " NOTAMs)";
+        },
+        rowFormatter: function(row) {
+          var data = row.getData();
+          var loc = data.location;
+          if (airportColors[loc]) {
+            row.getElement().style.backgroundColor = airportColors[loc];
+            row.getElement().style.color = (airportColors[loc] === '#000000' || airportColors[loc] === '#000075') ? '#fff' : '#000';
+          }
+        },
+        columns: [
+          { title: "NOTAM ID", field: "id" },
+          { title: "Classification", field: "classification" },
+          { title: "Issued", field: "issued" },
+          { title: "Last Updated", field: "lastUpdated" },
+          { title: "Affected FIR", field: "affectedFIR" },
+          { title: "Location", field: "location" },
+          { title: "Effective Start", field: "effectiveStart", formatter: "datetime", formatterParams: { inputFormat: "YYYYMMDD HH:mm", outputFormat: "MM/DD/YYYY HH:mm", invalidPlaceholder: "(invalid date)" } },
+          { title: "Effective End", field: "effectiveEnd", formatter: "datetime", formatterParams: { inputFormat: "YYYYMMDD HH:mm", outputFormat: "MM/DD/YYYY HH:mm", invalidPlaceholder: "Permanent" } },
+          { title: "Text", field: "text", formatter: "textarea" },
         ],
+      });
+      // Highlight all NOTAMs for a selected airport group when any row is clicked
+      table.on("rowClick", function(e, row) {
+        var loc = row.getData().location;
+        table.deselectRow();
+        table.getRows().forEach(function(r) {
+          if (r.getData().location === loc) {
+            r.getElement().style.outline = "3px solid #222";
+          } else {
+            r.getElement().style.outline = "";
+          }
+        });
       });
 
       //trigger AJAX load on "Load Data via AJAX" button click
-      document.getElementById("getNotams").addEventListener("click", function () {
+
+      function loadNotams() {
         var locationDesignator = $("#locationDesignator").val();
-        table.setData("notamTable/" + locationDesignator);
-      });
+        var includeArchived = $("#toggleArchived").is(":checked");
+        // Use the new API endpoint with include_archived param
+        var url = "/api/notams/intelligence?limit=5000";
+        if (locationDesignator) {
+          url += "&location_designator=" + encodeURIComponent(locationDesignator);
+        }
+        if (includeArchived) {
+          url += "&include_archived=true";
+        }
+        $.getJSON(url, function(data) {
+          if (data && data.items) {
+            table.setData(data.items);
+          } else {
+            table.setData([]);
+          }
+        });
+      }
+
+      document.getElementById("getNotams").addEventListener("click", loadNotams);
+      document.getElementById("toggleArchived").addEventListener("change", loadNotams);
 
       table.clearFilter();
 

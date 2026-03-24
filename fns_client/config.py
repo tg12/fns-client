@@ -1,3 +1,7 @@
+# ARCHIVED — configuration migrated to phantom-tide/core/constants.py
+# This file is kept for reference only. Do not edit.
+# Migration date: 2026-03-19
+
 # FNS NOTAM Client -- A JS Labs Prototype
 # Copyright (c) 2026 James Sawyer
 # https://labs.jamessawyer.co.uk/ | https://github.com/tg12

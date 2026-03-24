@@ -22,8 +22,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      opensky-poller:
+        condition: service_started
     ports:
       - "8080:8080"
+    environment:
+      OPENSKY_POLLER_URL: "http://opensky-poller:8081"
+      AIRCRAFT_PROXY_RPM: "0"
+      AIRCRAFT_PROXY_CACHE_SECONDS: "2"
+      # AIRCRAFT_PROXY_API_KEY: ""
     volumes:
       - ./src/main/resources/fnsClient.conf:/app/src/main/resources/fnsClient.conf:ro
       - ./docker/replay-data:/app/docker/replay-data:ro
@@ -33,4 +40,33 @@ services:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
       interval: 15s
       timeout: 5s
+      retries: 10
+
+  opensky-poller:
+    build:
+      context: ./opensky_poller
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      POLL_INTERVAL: "60"
+      MIN_POLL_INTERVAL_SECONDS: "${MIN_POLL_INTERVAL_SECONDS:-60}"
+      MAX_BACKOFF_SECONDS: "${MAX_BACKOFF_SECONDS:-900}"
+      HISTORY_MINUTES: "60"
+      CONTROL_BBOX_TTL_SECONDS: "0"
+      STALE_AFTER_SECONDS: "180"
+      OPENSKY_CLIENT_ID: "${OPENSKY_CLIENT_ID:-}"
+      OPENSKY_CLIENT_SECRET: "${OPENSKY_CLIENT_SECRET:-}"
+      TOKEN_REFRESH_MARGIN_SECONDS: "${TOKEN_REFRESH_MARGIN_SECONDS:-30}"
+      BBOX_LAT_MIN: "-90"
+      BBOX_LAT_MAX: "90"
+      BBOX_LON_MIN: "-180"
+      BBOX_LON_MAX: "180"
+    volumes:
+      - ./docker/opensky-data:/app/data/opensky
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/live', timeout=5)"]
+      interval: 15s
+      timeout: 10s
       retries: 10

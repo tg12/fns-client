@@ -50,8 +50,27 @@
     .hdr-btn-accent{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
     .hdr-btn-accent:hover{background:rgba(59,130,246,0.22)}
 
-    /* -- Middle row: sidebar + map -- */
-    .mid{display:grid;grid-template-columns:300px 1fr;overflow:hidden}
+    /* -- Middle row: sidebar + map + intelligence panel -- */
+    .mid{display:grid;grid-template-columns:300px 1fr 260px;overflow:hidden}
+
+    /* -- Right intelligence panel -- */
+    .right-panel{
+      display:flex;flex-direction:column;gap:0;
+      background:var(--surface);border-left:1px solid var(--border);overflow:hidden;
+    }
+    .trust-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--text-dim)}
+    .sit-rep{font-family:var(--mono);font-size:11px;color:var(--text);letter-spacing:0.02em}
+    .kpi-crit .kpi-value{color:var(--red)}
+    .kpi-warn .kpi-value{color:var(--amber)}
+    .delta-risk-up{color:var(--red)}
+    .delta-activity-up{color:var(--amber)}
+    .delta-traffic-up{color:var(--cyan)}
+    .delta-down{color:var(--green)}
+    .delta-flat{color:var(--text-dim)}
+    .trust-metrics{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+    .trust-metric{display:flex;justify-content:space-between;gap:8px;font:10px var(--mono)}
+    .trust-metric .label{color:var(--text-dim)}
+    .trust-metric .value{color:var(--text)}
 
     /* -- Sidebar -- */
     .sidebar{
@@ -71,6 +90,12 @@
     .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:2px}
     .kpi-value{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text-bright)}
     .kpi-value.sm{font-size:13px}
+    .sev-badge{display:inline-block;padding:1px 6px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:0.04em}
+    .sev-CRITICAL{background:var(--red-dim);color:var(--red)}
+    .sev-WARNING{background:var(--amber-dim);color:var(--amber)}
+    .sev-ADVISORY{background:var(--cyan-dim);color:var(--cyan)}
+    .sev-INFO{background:var(--green-dim);color:var(--green)}
+    .sev-NOISE{background:rgba(107,122,144,0.22);color:var(--text-dim)}
     .class-bars{display:flex;flex-direction:column;gap:3px}
     .class-row{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono)}
     .class-row .label{width:36px;text-align:right;color:var(--text-dim);flex-shrink:0}
@@ -219,26 +244,56 @@
     .site-footer a:hover{text-decoration:underline}
     .site-footer .spacer{flex:1}
 
+    /* -- Time window control -- */
+    .tw-group{display:flex;gap:3px;margin-bottom:6px}
+    .tw-btn{
+      flex:1;background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);
+      padding:4px 0;border-radius:var(--radius);cursor:pointer;font:700 10px var(--mono);
+      text-align:center;transition:background 80ms,color 80ms;
+    }
+    .tw-btn:hover{background:var(--border);color:var(--text)}
+    .tw-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+
+    /* -- NOTAM zone circle layer toggle -- */
+    .zone-toggle-row{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;color:var(--text)}
+
     /* -- Scrollbar -- */
     ::-webkit-scrollbar{width:6px;height:6px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
     ::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
+
+    /* -- Aircraft markers -- */
+    .ac-icon{pointer-events:none}
+    .ac-popup{font:12px var(--sans,system-ui)}
+    .ac-popup .ac-call{font-weight:700;font-size:13px;color:var(--text-bright,#e8edf5)}
+    .ac-popup .ac-id{color:var(--text-dim,#6b7a90);font-size:10px;margin-bottom:4px}
+    .ac-popup .ac-data{font-family:var(--mono,monospace);font-size:11px;line-height:1.7}
+    .ac-popup .ac-ground{margin-top:4px;color:#22c55e;font-size:10px}
+    .ac-popup .ac-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+    .ac-chip{display:inline-block;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:0.03em}
+    .ac-chip-type{background:rgba(96,165,250,0.16);color:#93c5fd}
+    .ac-chip-green{background:rgba(34,197,94,0.16);color:#4ade80}
+    .ac-chip-yellow{background:rgba(245,158,11,0.16);color:#fbbf24}
+    .ac-chip-red{background:rgba(239,68,68,0.16);color:#f87171}
+    .click-card{cursor:pointer;transition:background-color 120ms ease,border-color 120ms ease}
+    .click-card:hover{background:rgba(255,255,255,0.04);border-color:var(--accent)}
   </style>
 </head>
 <body>
 <div id="app">
   <!-- Top bar -->
   <header>
-    <span class="brand">FNS NOTAM INTEL</span>
+    <span class="brand">FNS INTEL</span>
     <span class="sep"></span>
-    <span style="font-size:10px;color:var(--text-dim);letter-spacing:0.04em">JS LABS</span>
-    <span class="sep"></span>
-    <span class="kv"><span class="k">DB</span><span class="v" id="hdrDbStatus"><span class="dot dot-amber"></span></span></span>
-    <span class="kv"><span class="k">Active</span><span class="v" id="hdrActiveCount">--</span></span>
-    <span class="kv"><span class="k">Mapped</span><span class="v" id="hdrMappedCount">--</span></span>
-    <span class="kv"><span class="k">Updated</span><span class="v" id="hdrLastUpdate">--</span></span>
+    <span class="sit-rep" id="hdrSitRep">Awaiting data</span>
     <span class="spacer"></span>
+    <span class="kv"><span class="k">SRC</span><span class="v" id="hdrDbStatus"><span class="dot dot-amber"></span></span></span>
+    <span class="kv"><span class="k">Updated</span><span class="v" id="hdrLastUpdate">--</span></span>
+    <span class="sep"></span>
+    <span id="hdrActiveCount" style="display:none"></span>
+    <span id="hdrMappedCount" style="display:none"></span>
+    <span id="hdrAircraftCount" style="display:none"></span>
     <button class="hdr-btn" id="btnExport">Export CSV</button>
     <button class="hdr-btn hdr-btn-accent" id="btnRefresh">Refresh</button>
   </header>
@@ -246,21 +301,37 @@
   <!-- Middle: sidebar + map -->
   <div class="mid">
     <aside class="sidebar">
-      <!-- KPIs -->
+      <!-- Situation Now: what needs action right now -->
       <div class="sb-section">
-        <div class="sb-title">Overview</div>
+        <div class="sb-title">Situation Now</div>
         <div class="kpi-grid">
-          <div class="kpi"><div class="kpi-label">Total Active</div><div class="kpi-value" id="kpiTotal">--</div></div>
-          <div class="kpi"><div class="kpi-label">Locations</div><div class="kpi-value" id="kpiLocations">--</div></div>
-          <div class="kpi"><div class="kpi-label">Geo-Mapped</div><div class="kpi-value" id="kpiMapped">--</div></div>
-          <div class="kpi"><div class="kpi-label">Unmapped</div><div class="kpi-value" id="kpiUnmapped">--</div></div>
+          <div class="kpi kpi-crit"><div class="kpi-label">Critical</div><div class="kpi-value sm" id="kpiCritical">--</div></div>
+          <div class="kpi kpi-warn"><div class="kpi-label">Warnings</div><div class="kpi-value sm" id="kpiWarnings">--</div></div>
+          <div class="kpi"><div class="kpi-label">Proximity</div><div class="kpi-value sm" id="kpiAlerts">--</div></div>
+          <div class="kpi"><div class="kpi-label">Noise Out</div><div class="kpi-value sm" id="kpiNoiseFiltered">--</div></div>
         </div>
       </div>
 
-      <!-- Classifications -->
       <div class="sb-section">
-        <div class="sb-title">Classification Breakdown</div>
-        <div class="class-bars" id="classBars"></div>
+        <div class="sb-title">What Changed</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Active Delta</div><div class="kpi-value sm" id="deltaActive">--</div></div>
+          <div class="kpi"><div class="kpi-label">Critical Delta</div><div class="kpi-value sm" id="deltaCritical">--</div></div>
+          <div class="kpi"><div class="kpi-label">Aircraft Delta</div><div class="kpi-value sm" id="deltaAircraft">--</div></div>
+          <div class="kpi"><div class="kpi-label">Exp &lt;2h</div><div class="kpi-value sm" id="kpiExpiringSoon">--</div></div>
+        </div>
+      </div>
+
+      <!-- Coverage: scope and classification context -->
+      <div class="sb-section">
+        <div class="sb-title">Coverage</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Active</div><div class="kpi-value" id="kpiTotal">--</div></div>
+          <div class="kpi"><div class="kpi-label">Locations</div><div class="kpi-value" id="kpiLocations">--</div></div>
+        </div>
+        <span id="kpiMapped" style="display:none">--</span>
+        <span id="kpiUnmapped" style="display:none">--</span>
+        <div class="class-bars" id="classBars" style="margin-top:8px"></div>
       </div>
 
       <!-- Filters -->
@@ -278,16 +349,40 @@
           </select>
         </div>
         <div class="filter-row" style="margin-bottom:4px">
-          <input class="filter-input" id="fSearch" placeholder="Search NOTAM text" style="flex:1">
+          <input class="filter-input" id="fSearch" placeholder="Search ICAO, runway, text, plain English" style="flex:1">
+        </div>
+        <div class="tw-group" id="twGroup">
+          <button class="tw-btn" data-hours="1">1H</button>
+          <button class="tw-btn" data-hours="3">3H</button>
+          <button class="tw-btn active" data-hours="6">6H</button>
+          <button class="tw-btn" data-hours="12">12H</button>
+          <button class="tw-btn" data-hours="24">24H</button>
+          <button class="tw-btn" data-hours="0">ALL</button>
+        </div>
+        <div class="filter-row" style="margin-bottom:4px">
+          <select class="filter-select" id="fMinSeverity" style="flex:1">
+            <option value="INFO">Min severity: info</option>
+            <option value="ADVISORY">Min severity: advisory</option>
+            <option value="WARNING">Min severity: warning</option>
+            <option value="CRITICAL">Min severity: critical</option>
+          </select>
         </div>
         <div class="toggle-row">
           <label class="toggle"><input type="checkbox" id="fShowExpired"><span class="slider"></span></label>
           <label class="toggle-label" for="fShowExpired">Show expired NOTAMs</label>
         </div>
+        <div class="toggle-row" style="margin-top:6px">
+          <label class="toggle"><input type="checkbox" id="fIncludeNoise"><span class="slider"></span></label>
+          <label class="toggle-label" for="fIncludeNoise">Include noise</label>
+        </div>
+        <div class="toggle-row" style="margin-top:4px">
+          <label class="toggle"><input type="checkbox" id="fShowZones" checked><span class="slider"></span></label>
+          <label class="toggle-label" for="fShowZones">Show airspace zones</label>
+        </div>
         <button class="sb-btn" id="btnApply">Apply Filters</button>
       </div>
 
-      <!-- Detail panel -->
+      <!-- Selected NOTAMs detail -->
       <div class="sb-section" style="border-bottom:none;flex:1;min-height:0;overflow-y:auto;padding-bottom:0">
         <div class="sb-title">Selected NOTAMs</div>
         <div class="detail-panel" id="detailPanel">
@@ -297,6 +392,72 @@
     </aside>
 
     <div id="map"></div>
+
+    <!-- Right panel: trust + intelligence + alerts -->
+    <aside class="right-panel">
+      <!-- Data trust and aircraft controls -->
+      <div class="sb-section">
+        <div class="sb-title">Data Trust</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Aircraft in view</div><div class="kpi-value sm" id="kpiAircraft">--</div></div>
+          <div class="kpi"><div class="kpi-label">Feed mode</div><div class="kpi-value sm" id="trustSource">--</div></div>
+        </div>
+        <div class="trust-row">
+          <span class="dot dot-amber" id="trustDot"></span>
+          <span id="trustAge" style="font-size:10px">data age unknown</span>
+        </div>
+        <div class="trust-metrics">
+          <div class="trust-metric"><span class="label">NOTAM DB</span><span class="value" id="trustDb">--</span></div>
+          <div class="trust-metric"><span class="label">HTTP</span><span class="value" id="trustHttp">--</span></div>
+          <div class="trust-metric"><span class="label">Credits</span><span class="value" id="trustCredits">--</span></div>
+          <div class="trust-metric"><span class="label">Budget</span><span class="value" id="trustBudget">--</span></div>
+          <div class="trust-metric"><span class="label">Store</span><span class="value" id="trustStore">--</span></div>
+        </div>
+        <div class="filter-row" style="margin-top:8px">
+          <select class="filter-select" id="fAltBand" style="flex:1">
+            <option value="ALL">Alt: all</option>
+            <option value="LOW">0-5k ft</option>
+            <option value="MID">5k-20k ft</option>
+            <option value="HIGH">20k+ ft</option>
+          </select>
+          <select class="filter-select" id="fPhase" style="flex:1">
+            <option value="ALL">Phase: all</option>
+            <option value="GROUND">Ground</option>
+            <option value="CLIMB">Climb</option>
+            <option value="CRUISE">Cruise</option>
+            <option value="DESCENT">Descent</option>
+          </select>
+        </div>
+        <div class="toggle-row" style="margin-top:6px">
+          <label class="toggle"><input type="checkbox" id="fShowAircraft" checked><span class="slider"></span></label>
+          <label class="toggle-label" for="fShowAircraft">Show aircraft</label>
+        </div>
+        <div class="toggle-row" style="margin-top:4px">
+          <label class="toggle"><input type="checkbox" id="fShowTrails" checked><span class="slider"></span></label>
+          <label class="toggle-label" for="fShowTrails">Show trails</label>
+        </div>
+        <div style="margin-top:6px;font-size:10px;color:var(--text-dim)">shape = type &bull; color = freshness</div>
+      </div>
+
+      <!-- Operational intelligence scrollable list -->
+      <div class="sb-section" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:6px">
+        <div class="sb-title">Operational Intelligence</div>
+        <div class="filter-row" style="margin-bottom:6px;flex-shrink:0">
+          <select class="filter-select" id="intelSort" style="flex:1">
+            <option value="latest_updated">Sort: latest updated</option>
+            <option value="soonest_expiry">Sort: soonest expiry</option>
+            <option value="highest_severity">Sort: highest severity</option>
+          </select>
+        </div>
+        <div id="intelList" style="flex:1;overflow-y:auto;font-size:10px;color:var(--text-dim)">Awaiting intelligence data.</div>
+      </div>
+
+      <!-- Proximity alerts -->
+      <div class="sb-section" style="flex-shrink:0;border-bottom:none">
+        <div class="sb-title">Proximity Alerts</div>
+        <div id="alertList" style="max-height:180px;overflow-y:auto;font-size:10px;color:var(--text-dim)">No active aircraft/NOTAM proximity alerts.</div>
+      </div>
+    </aside>
   </div>
 
   <!-- Bottom table -->
@@ -305,6 +466,7 @@
     <div class="table-bar">
       <span class="tb-title">NOTAM Feed</span>
       <span class="tb-count" id="tableCount">0 records</span>
+      <span class="tb-count" id="tableNarrative" style="color:var(--text-dim)"></span>
       <span class="spacer"></span>
     </div>
     <div class="table-wrap">
@@ -315,10 +477,13 @@
             <th>Location</th>
             <th>Class</th>
             <th>Status</th>
+            <th>Ops Category</th>
+            <th>Severity</th>
             <th>Expires</th>
             <th>Valid From</th>
             <th>Valid To</th>
             <th>Accountability</th>
+            <th>Plain English</th>
             <th>Text</th>
           </tr>
         </thead>
@@ -345,13 +510,39 @@
 
   // ---- State ----
   const state = {
+    allRows: [],
     rows: [],
+    filteredRows: [],
+    statusPayload: null,
+    intelligenceSummary: null,
+    aircraftPayload: null,
+    aircraftMetrics: null,
     airports: {},         // ICAO -> {lat, lon, name, city, country}
     airportsLoaded: false,
     selectedLocation: null,
-    markers: new Map(),   // ICAO -> Leaflet marker
+    markers: new Map(),   // ICAO -> Leaflet circleMarker
+    zoneCircles: new Map(),  // fnsid -> Leaflet circle (real airspace geometry)
     markerLayer: null,
+    notamZoneLayer: null,
+    aircraftLayer: null,
+    aircraftMarkers: new Map(),
+    aircraftTrails: new Map(),
+    aircraftVisible: true,
+    windowHours: 6,       // time window for NOTAM display (0 = ALL)
+    lastBboxControlTs: 0,
+    bboxDebounceTimer: null,
+    searchDebounceTimer: null,
+    mapInteractionActive: false,
+    previousNotamSnapshot: null,
+    previousAircraftCount: null,
   };
+
+  var NOTAM_REFRESH_MS = 60000;
+  var AIRCRAFT_REFRESH_MS = 60000;
+  var BBOX_CONTROL_DEBOUNCE_MS = 700;
+  var MAX_RENDERED_AIRCRAFT = 1200;
+  var AIRCRAFT_FRESH_MS = 90 * 1000;
+  var AIRCRAFT_RECENT_MS = 4 * 60 * 1000;
 
   // ---- Map setup ----
   const map = L.map('map', {
@@ -363,7 +554,8 @@
     worldCopyJump: false,
     zoomSnap: 1,
     zoomDelta: 1,
-    wheelDebounceTime: 100,
+    scrollWheelZoom: true,
+    wheelDebounceTime: 80,
     wheelPxPerZoomLevel: 120,
     inertia: true,
     inertiaDeceleration: 3000,
@@ -380,7 +572,13 @@
     subdomains: 'abcd',
   }).addTo(map);
 
+  // Zone circles sit beneath airport markers so circles don't obscure click targets.
+  state.notamZoneLayer = L.layerGroup().addTo(map);
   state.markerLayer = L.layerGroup().addTo(map);
+
+  // Aircraft layer sits beneath NOTAM markers so NOTAMs stay readable.
+  state.aircraftLayer = L.layerGroup().addTo(map);
+  state.markerLayer.bringToFront && setTimeout(function () { state.markerLayer.bringToFront(); }, 0);
 
   // ---- FIR / ARTCC / non-airport ICAO lookups ----
   // US ARTCCs, common FIRs, and TFR-related designators that are NOT in airports.json.
@@ -399,10 +597,727 @@
     LFFF:[48.80,2.50],EDGG:[50.05,8.57],EDUU:[50.87,12.64],EDMM:[48.35,11.79],
   };
 
+  // ---- Aircraft helpers ----
+
+  // Source-id to label mapping per OpenSky API spec.
+  var AC_SOURCE = ['ADS-B', 'ASTERIX', 'MLAT', 'FLARM'];
+  var AC_CATEGORY_LABELS = {
+    2: 'LIGHT',
+    3: 'SMALL',
+    4: 'LARGE',
+    5: 'HVY-VTX',
+    6: 'HEAVY',
+    7: 'FAST',
+    8: 'ROTOR',
+    9: 'GLIDER',
+    10: 'LTA',
+    11: 'SKYDIVE',
+    12: 'ULTRA',
+    14: 'UAV',
+    16: 'EMERG-GND',
+    17: 'SERVICE-GND'
+  };
+
+  function aircraftCategoryLabel(ac) {
+    return AC_CATEGORY_LABELS[ac.category] || 'FIXED-WING';
+  }
+
+  function aircraftTypeGroup(ac) {
+    var category = Number(ac.category);
+    if (category === 8) return 'rotorcraft';
+    if (category === 14) return 'uav';
+    if (category === 16 || category === 17) return 'surface';
+    if (category === 6 || category === 5) return 'heavy';
+    if (category === 9 || category === 10 || category === 11 || category === 12) return 'special';
+    return 'fixed';
+  }
+
+  function aircraftFreshness(ac, fetchedAt) {
+    var nowMs = Date.now();
+    var lastContact = Number(ac.last_contact || 0);
+    var pollAgeMs = fetchedAt ? Math.max(0, nowMs - (Number(fetchedAt) * 1000)) : 0;
+    var contactAgeMs = lastContact ? Math.max(0, nowMs - (lastContact * 1000)) : Number.POSITIVE_INFINITY;
+    var ageMs = Math.max(pollAgeMs, contactAgeMs);
+    var ageSeconds = Math.round(ageMs / 1000);
+    if (ageMs <= AIRCRAFT_FRESH_MS) return { bucket: 'green', label: 'FRESH', ageSeconds: ageSeconds };
+    if (ageMs <= AIRCRAFT_RECENT_MS) return { bucket: 'yellow', label: 'RECENT', ageSeconds: ageSeconds };
+    return { bucket: 'red', label: 'STALE', ageSeconds: ageSeconds };
+  }
+
+  function freshnessColor(bucket) {
+    if (bucket === 'green') return '#22c55e';
+    if (bucket === 'yellow') return '#f59e0b';
+    return '#ef4444';
+  }
+
+  function freshnessAgeLabel(ageSeconds) {
+    if (!isFinite(ageSeconds)) return 'no contact';
+    if (ageSeconds < 60) return ageSeconds + 's old';
+    if (ageSeconds < 3600) return Math.round(ageSeconds / 60) + 'm old';
+    return Math.round(ageSeconds / 3600) + 'h old';
+  }
+
+  function altitudeFeet(ac) {
+    var altM = ac.baro_altitude != null ? ac.baro_altitude : ac.geo_altitude;
+    return altM == null ? null : altM * 3.28084;
+  }
+
+  function altitudeBand(ac) {
+    var ft = altitudeFeet(ac);
+    if (ft == null) return 'UNKNOWN';
+    if (ft < 5000) return 'LOW';
+    if (ft < 20000) return 'MID';
+    return 'HIGH';
+  }
+
+  function phaseOfAircraft(ac) {
+    if (ac.on_ground) return 'GROUND';
+    var vr = ac.vertical_rate == null ? 0 : ac.vertical_rate;
+    if (vr > 0.7) return 'CLIMB';
+    if (vr < -0.7) return 'DESCENT';
+    return 'CRUISE';
+  }
+
+  function passesAircraftFilters(ac) {
+    var altFilter = document.getElementById('fAltBand').value;
+    var phaseFilter = document.getElementById('fPhase').value;
+    if (altFilter !== 'ALL' && altitudeBand(ac) !== altFilter) return false;
+    if (phaseFilter !== 'ALL' && phaseOfAircraft(ac) !== phaseFilter) return false;
+    return true;
+  }
+
+  function haversineNm(lat1, lon1, lat2, lon2) {
+    var rad = Math.PI / 180.0;
+    var dLat = (lat2 - lat1) * rad;
+    var dLon = (lon2 - lon1) * rad;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(lat1 * rad) * Math.cos(lat2 * rad)
+      * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return 3440.065 * c;
+  }
+
+  // ---- NOTAM geometry parsing (mirrors Python extract_notam_geometry) ----
+
+  function parseQAlt(raw) {
+    if (!raw) return null;
+    raw = String(raw).toUpperCase().trim();
+    if (raw === 'SFC' || raw === 'GND' || raw === '000') return 0;
+    if (raw === 'UNL') return 99999;
+    if (raw.startsWith('FL')) { var v = parseInt(raw.slice(2), 10); return isNaN(v) ? null : v * 100; }
+    var n = parseInt(raw, 10);
+    return isNaN(n) ? null : n * 100;
+  }
+
+  function parseNotamGeometryFromText(text) {
+    var upper = text.toUpperCase();
+
+    function dm(deg, min, hemi) {
+      var d = parseInt(deg, 10) + parseInt(min, 10) / 60;
+      return (hemi === 'S' || hemi === 'W') ? -d : d;
+    }
+    function dms(deg, min, sec, hemi) {
+      var d = parseInt(deg, 10) + parseInt(min, 10) / 60 + parseInt(sec, 10) / 3600;
+      return (hemi === 'S' || hemi === 'W') ? -d : d;
+    }
+    function fl(f) { return parseInt(f, 10) * 100; }
+
+    function extractRadius(txt) {
+      var m = txt.match(/(\d+(?:\.\d+)?)\s*NM\s+RADIUS\s+(?:OF|FROM)\s+(?:THE\s+)?[A-Z]{3,4}/i)
+              || txt.match(/WITHIN\s+(\d+(?:\.\d+)?)\s*NM\s+(?:OF|RADIUS\s+OF)\s+(?:THE\s+)?[A-Z]{3,4}/i)
+              || txt.match(/\b(\d{1,3}(?:\.\d+)?)\s*NM\b/i);
+      if (!m) return null;
+      var v = parseFloat(m[1]);
+      return (v > 0 && v <= 500) ? v : null;
+    }
+
+    function extractAlt(txt) {
+      var m;
+      m = txt.match(/SFC\s+TO\s+FL\s*(\d+)/i);
+      if (m) return { floor: 0, ceil: fl(m[1]) };
+      m = txt.match(/SFC\s+TO\s+(\d+)\s*(?:FT|FEET)/i);
+      if (m) return { floor: 0, ceil: parseInt(m[1], 10) };
+      m = txt.match(/FL\s*(\d+)\s+TO\s+FL\s*(\d+)/i);
+      if (m) return { floor: fl(m[1]), ceil: fl(m[2]) };
+      m = txt.match(/BELOW\s+FL\s*(\d+)/i);
+      if (m) return { floor: null, ceil: fl(m[1]) };
+      m = txt.match(/\bFL\s*(\d{2,3})\b/i);
+      if (m) return { floor: null, ceil: fl(m[1]) };
+      return { floor: null, ceil: null };
+    }
+
+    var alt = extractAlt(upper);
+    var radius = extractRadius(upper);
+
+    // Priority 1: Q-line embedded in text block
+    var qm = upper.match(
+      /Q\)\s*[A-Z]{2,4}\/\S+\/[^\/\s]*\/[^\/\s]*\/[^\/\s]*\/(\S+)\/(\S+)\/(\d{2})(\d{2})([NS])(\d{3})(\d{2})([EW])(\d{3})/
+    );
+    if (qm) {
+      var qr = parseInt(qm[9], 10) || null;
+      var qFloor = parseQAlt(qm[1]);
+      var qCeil = parseQAlt(qm[2]);
+      return {
+        lat: dm(qm[3], qm[4], qm[5]),
+        lon: dm(qm[6], qm[7], qm[8]),
+        radius_nm: qr,
+        alt_floor_ft: qFloor !== null ? qFloor : alt.floor,
+        alt_ceil_ft: qCeil !== null ? qCeil : alt.ceil,
+        source: 'q_line_in_text',
+      };
+    }
+
+    // Priority 2: DMS (DDMMSS + N/S + DDDMMSS + E/W)
+    var dmsm = upper.match(/\b(\d{2})(\d{2})(\d{2})([NS])\s*(\d{3})(\d{2})(\d{2})([EW])\b/);
+    if (dmsm) {
+      return {
+        lat: dms(dmsm[1], dmsm[2], dmsm[3], dmsm[4]),
+        lon: dms(dmsm[5], dmsm[6], dmsm[7], dmsm[8]),
+        radius_nm: radius, alt_floor_ft: alt.floor, alt_ceil_ft: alt.ceil,
+        source: 'text_dms',
+      };
+    }
+
+    // Priority 3: DM compact (DDMM + N/S + DDDMM + E/W)
+    var dmm = upper.match(/\b(\d{2})(\d{2})([NS])\s*(\d{3})(\d{2})([EW])\b/);
+    if (dmm) {
+      return {
+        lat: dm(dmm[1], dmm[2], dmm[3]),
+        lon: dm(dmm[4], dmm[5], dmm[6]),
+        radius_nm: radius, alt_floor_ft: alt.floor, alt_ceil_ft: alt.ceil,
+        source: 'text_dm',
+      };
+    }
+
+    return null;
+  }
+
+  function inferNotamRadiusNm(row) {
+    var txt = (row.notamtext || '').toUpperCase();
+    var direct = txt.match(/(\d{1,3}(?:\.\d+)?)\s*NM/);
+    if (direct) return Math.min(80, Math.max(3, parseFloat(direct[1])));
+    if (txt.includes('TFR') || txt.includes('RESTRICT')) return 25;
+    if (txt.includes('DANGER') || txt.includes('PROHIBITED')) return 18;
+    return 10;
+  }
+
+  function buildNotamZones(rows) {
+    var zones = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var text = row.notamtext || '';
+      var loc = (row.locationdesignator || '').toUpperCase();
+
+      // Try real geometry first (Q-line / coordinate extraction from text body)
+      var geom = getRowGeometry(row);
+      var lat, lon, radius_nm, hasRealGeometry;
+
+      if (geom && geom.lat != null && geom.lon != null) {
+        lat = geom.lat;
+        lon = geom.lon;
+        radius_nm = geom.radius_nm || inferNotamRadiusNm(row);
+        hasRealGeometry = true;
+      } else {
+        // Fall back to airport reference point
+        if (!loc) continue;
+        var ref = resolveLocation(loc);
+        if (!ref) continue;
+        lat = ref.lat;
+        lon = ref.lon;
+        radius_nm = inferNotamRadiusNm(row);
+        hasRealGeometry = false;
+      }
+
+      zones.push({
+        loc: loc || '',
+        lat: lat,
+        lon: lon,
+        radius_nm: radius_nm,
+        text: text,
+        id: String(row.fnsid || ''),
+        classification: (row.classification || '').toUpperCase(),
+        operational_category: row.intelligence ? row.intelligence.operational_category : '',
+        notam_severity: row.intelligence ? row.intelligence.severity : '',
+        plain_english: row.intelligence ? row.intelligence.plain_english : '',
+        has_real_geometry: hasRealGeometry,
+        geom: geom,
+      });
+    }
+    return zones;
+  }
+
+  // Cache geometry on the row object so we only parse regex once per row per fetch cycle.
+  function getRowGeometry(row) {
+    if (row._geom !== undefined) return row._geom;
+    row._geom = parseNotamGeometryFromText(row.notamtext || '');
+    return row._geom;
+  }
+
+  function renderNotamZones(rows) {
+    var showZones = document.getElementById('fShowZones').checked;
+    // Clear all zone circles if layer hidden
+    if (!showZones) {
+      state.notamZoneLayer.clearLayers();
+      state.zoneCircles.clear();
+      return;
+    }
+
+    var seenIds = new Set();
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var geom = getRowGeometry(row);
+      // Only draw circles for NOTAMs with parsed real geometry AND a non-trivial radius
+      if (!geom || !geom.radius_nm || geom.radius_nm < 0.5) continue;
+
+      var id = String(row.fnsid || '');
+      seenIds.add(id);
+
+      var intel = row.intelligence || {};
+      var severity = String(intel.severity || 'INFO').toUpperCase();
+      var color = severity === 'CRITICAL' ? '#ef4444'
+                : severity === 'WARNING'  ? '#f59e0b'
+                : severity === 'ADVISORY' ? '#06b6d4'
+                : '#3b82f6';
+      var radiusM = geom.radius_nm * 1852;
+
+      var loc = (row.locationdesignator || '').toUpperCase();
+      var altLabel = '';
+      if (geom.alt_floor_ft != null && geom.alt_ceil_ft != null) {
+        altLabel = ' | ' + geom.alt_floor_ft + '-' + geom.alt_ceil_ft + 'ft';
+      } else if (geom.alt_ceil_ft != null) {
+        altLabel = ' | SFC-' + geom.alt_ceil_ft + 'ft';
+      }
+      var popupContent = '<div style="font:11px var(--sans,system-ui);min-width:180px">' +
+        '<b style="font-size:12px">' + esc(String(row.fnsid || '')) + ' @ ' + esc(loc) + '</b><br>' +
+        '<span class="sev-badge sev-' + esc(severity) + '">' + esc(severity) + '</span>' +
+        '<span style="font-size:10px;color:var(--text-dim,#6b7a90);margin-left:4px">' + esc(String(intel.operational_category || '').toUpperCase()) + '</span><br>' +
+        '<div style="margin-top:4px;font-size:11px">' + esc(intel.plain_english || text.slice(0, 120)) + '</div>' +
+        '<div style="font-family:var(--mono,monospace);font-size:10px;color:var(--text-dim,#6b7a90);margin-top:4px">' +
+          'R:' + geom.radius_nm.toFixed(1) + 'nm' + altLabel + ' | src:' + esc(geom.source || '?') +
+        '</div>' +
+        '</div>';
+
+      var existing = state.zoneCircles.get(id);
+      if (existing) {
+        existing.setRadius(radiusM);
+        existing.setStyle({ color: color, fillColor: color });
+        existing.setPopupContent(popupContent);
+      } else {
+        (function (capturedRow, capturedLoc) {
+          var circle = L.circle([geom.lat, geom.lon], {
+            radius: radiusM,
+            color: color, weight: 1.5, opacity: 0.75,
+            fillColor: color, fillOpacity: 0.07,
+            interactive: true,
+          });
+          circle.bindPopup(popupContent, { keepInView: true, maxWidth: 320 });
+          circle.on('click', function () {
+            var locRows = state.rows.filter(function (r) {
+              return (r.locationdesignator || '').toUpperCase() === capturedLoc;
+            });
+            selectLocation(capturedLoc, locRows.length ? locRows : [capturedRow]);
+          });
+          state.notamZoneLayer.addLayer(circle);
+          state.zoneCircles.set(id, circle);
+        })(row, loc);
+      }
+    }
+
+    // Remove zone circles no longer in current view
+    for (var [zid, circle] of state.zoneCircles) {
+      if (!seenIds.has(zid)) {
+        state.notamZoneLayer.removeLayer(circle);
+        state.zoneCircles.delete(zid);
+      }
+    }
+  }
+
+  function scoreConflict(ac, zone, distanceNm) {
+    var confidence = 0.35;
+    var inside = distanceNm <= zone.radius_nm;
+    if (inside) confidence += 0.30;
+    var ft = altitudeFeet(ac);
+    if (ft != null && ft < 12000) confidence += 0.15;
+    if (!ac.on_ground) confidence += 0.10;
+    var txt = zone.text.toUpperCase();
+    if (txt.includes('TFR') || txt.includes('PROHIBITED') || txt.includes('RESTRICT')) {
+      confidence += 0.10;
+    }
+    confidence = Math.max(0.0, Math.min(0.99, confidence));
+    return {
+      inside: inside,
+      confidence: confidence,
+      severity: inside ? 'HIGH' : (distanceNm <= zone.radius_nm * 1.35 ? 'MED' : 'LOW'),
+    };
+  }
+
+  function renderAlertList(alerts) {
+    var kpiEl = document.getElementById('kpiAlerts');
+    if (kpiEl) kpiEl.textContent = alerts.length.toLocaleString();
+    var el = document.getElementById('alertList');
+    if (!alerts.length) {
+      el.innerHTML = 'No active aircraft/NOTAM proximity alerts.';
+      updateSitRep();
+      return;
+    }
+    var top = alerts.slice(0, 8);
+    el.innerHTML = top.map(function (a) {
+      var pct = Math.round(a.confidence * 100);
+      var color = a.severity === 'HIGH' ? '#ef4444' : (a.severity === 'MED' ? '#f59e0b' : '#22c55e');
+      var intelLine = a.notam_severity
+        ? '<div style="font-size:10px;color:var(--text-dim)">' + esc(a.notam_category || 'UNKNOWN') + ' | ' + esc(a.notam_severity) + '</div>'
+        : '';
+      var translationLine = a.notam_plain_english
+        ? '<div style="font-size:10px;color:var(--text-dim);margin-top:2px">' + esc(a.notam_plain_english) + '</div>'
+        : '';
+      return '<div class="click-card" data-loc="' + esc(a.loc) + '" style="margin-top:5px;padding:6px;border:1px solid var(--border);border-left:3px solid ' + color + ';background:var(--surface-2)">' +
+        '<div style="font-family:var(--mono);font-size:10px;color:var(--text-bright)">' + esc(a.callsign) + ' -> ' + esc(a.loc) + '</div>' +
+        '<div style="font-size:10px;color:var(--text-dim)">' + esc(a.zone_id) + ' | ' + a.distance_nm.toFixed(1) + 'nm | ' + pct + '% | ' + esc(a.severity) + '</div>' +
+        intelLine +
+        translationLine +
+        '</div>';
+    }).join('');
+    updateSitRep();
+  }
+
+  function renderIntelligenceList(rows) {
+    var el = document.getElementById('intelList');
+    if (!rows.length) {
+      el.innerHTML = 'No NOTAMs match the current intelligence filter.';
+      return;
+    }
+    var sortMode = document.getElementById('intelSort').value;
+    var critical = rows.filter(function (row) {
+      return String((row.intelligence || {}).severity || '').toUpperCase() === 'CRITICAL';
+    });
+
+    // Show all critical items in a scrollable list using the selected sort mode.
+    sortRowsByMode(critical, sortMode);
+
+    var rankedRows = rows.slice();
+    sortRowsByMode(rankedRows, sortMode);
+    var sourceRows = critical.length ? critical : rankedRows.slice(0, 20);
+    var intro = critical.length
+      ? '<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">Showing all critical NOTAMs (' + critical.length.toLocaleString() + ')</div>'
+      : '<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">No critical NOTAMs. Showing top 20 by severity.</div>';
+
+    el.innerHTML = intro + sourceRows.map(function (row) {
+      var intel = row.intelligence || {};
+      var sev = String(intel.severity || 'INFO').toUpperCase();
+      var cat = String(intel.operational_category || 'UNKNOWN').toUpperCase();
+      var plain = intel.plain_english || row.notamtext || '';
+      var updatedRel = relativeFromNow(row.updatedtimestamp, 'updated');
+      var startRel = relativeFromNow(row.validfromtimestamp, 'starts');
+      var endRel = row.validtotimestamp ? relativeFromNow(row.validtotimestamp, 'ends') : 'ends: permanent';
+      return '<div class="click-card" data-loc="' + esc((row.locationdesignator || '').toUpperCase()) + '" data-fnsid="' + esc(String(row.fnsid || '')) + '" style="margin-top:5px;padding:6px;border:1px solid var(--border);background:var(--surface-2)">' +
+        '<div style="display:flex;gap:6px;align-items:center;justify-content:space-between">' +
+          '<span style="font-family:var(--mono);font-size:10px;color:var(--text-bright)">' + esc(String(row.fnsid || '')) + ' @ ' + esc((row.locationdesignator || '').toUpperCase()) + '</span>' +
+          '<span class="sev-badge sev-' + esc(sev) + '">' + esc(sev) + '</span>' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text-dim);margin-top:3px">' + esc(cat) + ' | ' + esc(intel.facility || 'facility') + '</div>' +
+        '<div style="font-size:10px;color:var(--text-dim);margin-top:3px">' + esc(updatedRel + ' | ' + startRel + ' | ' + endRel) + '</div>' +
+        '<div style="font-size:10px;color:var(--text);margin-top:3px">' + esc(plain) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function severityRank(row) {
+    var sev = String(((row.intelligence || {}).severity || 'INFO')).toUpperCase();
+    if (sev === 'CRITICAL') return 4;
+    if (sev === 'WARNING') return 3;
+    if (sev === 'ADVISORY') return 2;
+    if (sev === 'INFO') return 1;
+    if (sev === 'NOISE') return 0;
+    return -1;
+  }
+
+  function sortRowsByMode(rows, sortMode) {
+    var query = getSearchQuery();
+    rows.sort(function (a, b) {
+      if (query.tokens.length) {
+        var aScore = Number(a._search_score || 0);
+        var bScore = Number(b._search_score || 0);
+        if (aScore !== bScore) return bScore - aScore;
+      }
+      if (sortMode === 'soonest_expiry') {
+        var aExpiry = parseTimestamp(a.validtotimestamp);
+        var bExpiry = parseTimestamp(b.validtotimestamp);
+        if (!aExpiry) aExpiry = Number.POSITIVE_INFINITY;
+        if (!bExpiry) bExpiry = Number.POSITIVE_INFINITY;
+        if (aExpiry !== bExpiry) return aExpiry - bExpiry;
+      } else if (sortMode === 'highest_severity') {
+        var aSev = severityRank(a);
+        var bSev = severityRank(b);
+        if (aSev !== bSev) return bSev - aSev;
+      } else {
+        var aUpdated = parseTimestamp(a.updatedtimestamp);
+        var bUpdated = parseTimestamp(b.updatedtimestamp);
+        if (aUpdated !== bUpdated) return bUpdated - aUpdated;
+      }
+      var aFid = Number(a.fnsid || 0);
+      var bFid = Number(b.fnsid || 0);
+      return bFid - aFid;
+    });
+  }
+
+  function parseTimestamp(value) {
+    if (!value) return 0;
+    var t = new Date(value).getTime();
+    return Number.isNaN(t) ? 0 : t;
+  }
+
+  function relativeFromNow(value, label) {
+    var t = parseTimestamp(value);
+    if (!t) return label + ': unknown';
+    var now = Date.now();
+    var diffMs = t - now;
+    var absMs = Math.abs(diffMs);
+    var absMin = Math.round(absMs / 60000);
+
+    if (absMin < 1) {
+      return label + ': now';
+    }
+
+    var amount;
+    var unit;
+    if (absMin < 60) {
+      amount = absMin;
+      unit = 'm';
+    } else if (absMin < 1440) {
+      amount = Math.round(absMin / 60);
+      unit = 'h';
+    } else {
+      amount = Math.round(absMin / 1440);
+      unit = 'd';
+    }
+
+    if (diffMs >= 0) {
+      return label + ': in ' + amount + unit;
+    }
+    return label + ': ' + amount + unit + ' ago';
+  }
+
+  function correlateAircraftWithNotams(aircraftRows, notamRows) {
+    var alerts = [];
+    var zones = buildNotamZones(notamRows);
+    for (var i = 0; i < aircraftRows.length; i++) {
+      var ac = aircraftRows[i];
+      for (var j = 0; j < zones.length; j++) {
+        var zone = zones[j];
+        var d = haversineNm(ac.latitude, ac.longitude, zone.lat, zone.lon);
+        if (d > zone.radius_nm * 1.35) continue;
+        var scored = scoreConflict(ac, zone, d);
+        alerts.push({
+          callsign: (ac.callsign || ac.icao24 || '').trim() || ac.icao24,
+          icao24: ac.icao24,
+          loc: zone.loc,
+          zone_id: zone.id,
+          distance_nm: d,
+          confidence: scored.confidence,
+          severity: scored.severity,
+          notam_category: zone.operational_category || '',
+          notam_severity: zone.notam_severity || '',
+          notam_plain_english: zone.plain_english || '',
+        });
+      }
+    }
+    var dedup = {};
+    for (var k = 0; k < alerts.length; k++) {
+      var alert = alerts[k];
+      var key = alert.callsign + '|' + alert.loc;
+      if (!dedup[key] || alert.confidence > dedup[key].confidence) {
+        dedup[key] = alert;
+      }
+    }
+    alerts = Object.values(dedup);
+    alerts.sort(function (a, b) {
+      if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+      return a.distance_nm - b.distance_nm;
+    });
+    renderAlertList(alerts);
+  }
+
+  function aircraftIcon(ac, heading, color) {
+    // Shape encodes aircraft type, color encodes freshness.
+    var h = (heading != null && !isNaN(heading)) ? Math.round(heading) : 0;
+    var typeGroup = aircraftTypeGroup(ac);
+    var shape = '<polygon points="10,1 13.5,19 10,14.5 6.5,19" fill="' + color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linejoin="round"/>';
+    if (typeGroup === 'heavy') {
+      shape = '<path d="M10 1 L14 8 L12 8 L12 19 L8 19 L8 8 L6 8 Z" fill="' + color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linejoin="round"/>';
+    } else if (typeGroup === 'rotorcraft') {
+      shape = '<circle cx="10" cy="10" r="4.5" fill="' + color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/>'
+        + '<line x1="2" y1="10" x2="18" y2="10" stroke="' + color + '" stroke-width="1.4"/>'
+        + '<line x1="10" y1="2" x2="10" y2="18" stroke="' + color + '" stroke-width="1.4"/>';
+    } else if (typeGroup === 'uav') {
+      shape = '<rect x="5" y="5" width="10" height="10" rx="2" fill="' + color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/>';
+    } else if (typeGroup === 'surface') {
+      shape = '<rect x="3" y="7" width="14" height="6" rx="2" fill="' + color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/>';
+    } else if (typeGroup === 'special') {
+      shape = '<polygon points="10,2 17,10 10,18 3,10" fill="' + color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linejoin="round"/>';
+    }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20">'
+      + '<g transform="rotate(' + h + ',10,10)">' + shape + '</g></svg>';
+    return L.divIcon({ html: svg, className: 'ac-icon', iconSize: [16, 16], iconAnchor: [8, 8] });
+  }
+
+  async function sendBboxControl() {
+    var now = Date.now();
+    if (now - state.lastBboxControlTs < BBOX_CONTROL_DEBOUNCE_MS) return;
+    state.lastBboxControlTs = now;
+    try {
+      var b = map.getBounds();
+      await fetch('/api/aircraft/control/bbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lamin: Number(b.getSouth().toFixed(4)),
+          lomin: Number(b.getWest().toFixed(4)),
+          lamax: Number(b.getNorth().toFixed(4)),
+          lomax: Number(b.getEast().toFixed(4)),
+        }),
+      });
+    } catch (_err) {
+      // best-effort control channel
+    }
+  }
+
+  async function fetchAircraft() {
+    try {
+      var bounds = map.getBounds();
+      var params = new URLSearchParams({
+        lamin: bounds.getSouth().toFixed(4),
+        lamax: bounds.getNorth().toFixed(4),
+        lomin: bounds.getWest().toFixed(4),
+        lomax: bounds.getEast().toFixed(4),
+        include_trails: document.getElementById('fShowTrails').checked ? '1' : '0',
+        history_minutes: '30',
+      });
+      var res = await fetch('/api/aircraft?' + params.toString());
+      if (!res.ok) return null;
+      return res.json();
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function renderAircraft(data) {
+    var seen = new Set();
+    var countEl = document.getElementById('kpiAircraft');
+    var hdrEl = document.getElementById('hdrAircraftCount');
+    if (!data || !state.aircraftVisible) {
+      for (const [, marker] of state.aircraftMarkers) {
+        state.aircraftLayer.removeLayer(marker);
+      }
+      for (const [, trail] of state.aircraftTrails) {
+        state.aircraftLayer.removeLayer(trail);
+      }
+      state.aircraftMarkers.clear();
+      state.aircraftTrails.clear();
+      if (countEl) countEl.textContent = '--';
+      if (hdrEl) hdrEl.textContent = '--';
+      return;
+    }
+    var allStates = data.states || [];
+    var sv = allStates.filter(passesAircraftFilters).slice(0, MAX_RENDERED_AIRCRAFT);
+    var trails = data.trails || {};
+    var fetchedAt = data.fetched_at;
+    if (countEl) countEl.textContent = sv.length.toLocaleString();
+    if (hdrEl) hdrEl.textContent = sv.length.toLocaleString();
+
+    for (var i = 0; i < sv.length; i++) {
+      var ac = sv[i];
+      if (ac.latitude == null || ac.longitude == null) continue;
+      var freshness = aircraftFreshness(ac, fetchedAt);
+      var color = freshnessColor(freshness.bucket);
+      var icon = aircraftIcon(ac, ac.true_track, color);
+      var altM = ac.baro_altitude != null ? ac.baro_altitude : ac.geo_altitude;
+      var altFt = altM != null ? Math.round(altM * 3.28084).toLocaleString() + ' ft' : '--';
+      var speedKts = ac.velocity != null ? Math.round(ac.velocity * 1.94384) + ' kts' : '--';
+      var callsign = (ac.callsign || ac.icao24 || '').trim() || ac.icao24;
+      var src = AC_SOURCE[ac.position_source] || 'UNK';
+      var phase = phaseOfAircraft(ac);
+      var typeLabel = aircraftCategoryLabel(ac);
+      var contactAge = ac.last_contact ? Math.max(0, Math.floor(Date.now() / 1000) - Number(ac.last_contact)) : Number.POSITIVE_INFINITY;
+      var pollAge = fetchedAt ? Math.max(0, Math.floor(Date.now() / 1000) - Number(fetchedAt)) : Number.POSITIVE_INFINITY;
+      var popup = '<div class="ac-popup">'
+        + '<div class="ac-call">' + esc(callsign) + '</div>'
+        + '<div class="ac-id">' + esc(ac.icao24) + ' &bull; ' + esc(ac.origin_country) + ' &bull; ' + esc(src) + '</div>'
+        + '<div class="ac-meta">'
+        + '<span class="ac-chip ac-chip-type">' + esc(typeLabel) + '</span>'
+        + '<span class="ac-chip ac-chip-' + esc(freshness.bucket) + '">' + esc(freshness.label + ' ' + freshnessAgeLabel(freshness.ageSeconds)) + '</span>'
+        + '</div>'
+        + '<div class="ac-data">'
+        + 'PHS&nbsp;&nbsp;' + esc(phase) + '<br>'
+        + 'ALT&nbsp;&nbsp;' + altFt + '<br>'
+        + 'SPD&nbsp;&nbsp;' + speedKts + '<br>'
+        + 'HDG&nbsp;&nbsp;' + (ac.true_track != null ? Math.round(ac.true_track) + '&deg;' : '--') + '<br>'
+        + 'V/S&nbsp;&nbsp;&nbsp;' + (ac.vertical_rate != null ? (ac.vertical_rate > 0 ? '+' : '') + Math.round(ac.vertical_rate * 196.85) + ' fpm' : '--') + '<br>'
+        + 'CNT&nbsp;&nbsp;' + esc(freshnessAgeLabel(contactAge)) + '<br>'
+        + 'POLL&nbsp;' + esc(freshnessAgeLabel(pollAge))
+        + '</div>'
+        + (ac.on_ground ? '<div class="ac-ground">ON GROUND</div>' : '')
+        + '</div>';
+      seen.add(ac.icao24);
+
+      var marker = state.aircraftMarkers.get(ac.icao24);
+      if (!marker) {
+        marker = L.marker([ac.latitude, ac.longitude], { icon: icon }).bindPopup(popup);
+        marker.addTo(state.aircraftLayer);
+        state.aircraftMarkers.set(ac.icao24, marker);
+      } else {
+        marker.setLatLng([ac.latitude, ac.longitude]);
+        marker.setIcon(icon);
+        marker.setPopupContent(popup);
+      }
+
+      if (document.getElementById('fShowTrails').checked) {
+        var pts = trails[ac.icao24] || [];
+        if (pts.length > 1) {
+          var poly = [];
+          for (var p = 0; p < pts.length; p++) {
+            poly.push([pts[p].lat, pts[p].lon]);
+          }
+          var line = state.aircraftTrails.get(ac.icao24);
+          if (!line) {
+            line = L.polyline(poly, { color: '#60a5fa', weight: 1, opacity: 0.45, interactive: false }).addTo(state.aircraftLayer);
+            state.aircraftTrails.set(ac.icao24, line);
+          } else {
+            line.setLatLngs(poly);
+          }
+        } else if (state.aircraftTrails.has(ac.icao24)) {
+          state.aircraftLayer.removeLayer(state.aircraftTrails.get(ac.icao24));
+          state.aircraftTrails.delete(ac.icao24);
+        }
+      } else if (state.aircraftTrails.has(ac.icao24)) {
+        state.aircraftLayer.removeLayer(state.aircraftTrails.get(ac.icao24));
+        state.aircraftTrails.delete(ac.icao24);
+      }
+    }
+
+    for (const [icao, marker] of state.aircraftMarkers) {
+      if (!seen.has(icao)) {
+        state.aircraftLayer.removeLayer(marker);
+        state.aircraftMarkers.delete(icao);
+      }
+    }
+    for (const [icao, trail] of state.aircraftTrails) {
+      if (!seen.has(icao)) {
+        state.aircraftLayer.removeLayer(trail);
+        state.aircraftTrails.delete(icao);
+      }
+    }
+
+    correlateAircraftWithNotams(sv, state.filteredRows);
+  }
+
   // ---- Airport data ----
   async function loadAirports() {
     try {
-      const res = await fetch('https://raw.githubusercontent.com/mwgg/Airports/master/airports.json');
+      // Try bundled local copy first; fall back to GitHub raw if not available.
+      let res = await fetch('/airports.json').catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch('https://raw.githubusercontent.com/mwgg/Airports/master/airports.json');
+      }
       const data = await res.json();
       for (const [code, info] of Object.entries(data)) {
         if (info.lat && info.lon) {
@@ -450,19 +1365,330 @@
     return res.json();
   }
 
+  async function fetchAircraftMetrics() {
+    try {
+      const res = await fetch('/api/aircraft/metrics');
+      if (!res.ok) return null;
+      return res.json();
+    } catch (_err) {
+      return null;
+    }
+  }
+
   async function fetchNotams(params) {
     const qs = new URLSearchParams(params);
-    const res = await fetch('/api/notams?' + qs.toString());
-    const data = await res.json();
-    return data.items || [];
+    const res = await fetch('/api/notams/intelligence?' + qs.toString());
+    return res.json();
   }
 
   // ---- Render status ----
-  function renderStatus(payload) {
+  function normalizeSearchText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
+  function tokenizeSearchText(value) {
+    var normalized = normalizeSearchText(value);
+    return normalized ? normalized.split(' ') : [];
+  }
+
+  function getSearchQuery() {
+    var raw = document.getElementById('fSearch').value || '';
+    return {
+      raw: raw,
+      normalized: normalizeSearchText(raw),
+      tokens: tokenizeSearchText(raw),
+    };
+  }
+
+  function getRowSearchData(row) {
+    if (row._search_index && row._search_words) {
+      return { index: row._search_index, words: row._search_words };
+    }
+    var intel = row.intelligence || {};
+    var fields = [
+      row.fnsid,
+      row.locationdesignator,
+      row.classification,
+      row.notamaccountability,
+      row.status,
+      intel.operational_category,
+      intel.facility,
+      intel.plain_english,
+      row.notamtext,
+    ];
+    var index = normalizeSearchText(fields.join(' '));
+    var words = index ? index.split(' ') : [];
+    row._search_index = index;
+    row._search_words = words;
+    return { index: index, words: words };
+  }
+
+  function isSubsequenceMatch(query, word) {
+    var qi = 0;
+    for (var i = 0; i < word.length && qi < query.length; i++) {
+      if (word.charAt(i) === query.charAt(qi)) qi += 1;
+    }
+    return qi === query.length;
+  }
+
+  function editDistanceAtMostOne(a, b) {
+    var aLen = a.length;
+    var bLen = b.length;
+    if (Math.abs(aLen - bLen) > 1) return false;
+    var i = 0;
+    var j = 0;
+    var edits = 0;
+    while (i < aLen && j < bLen) {
+      if (a.charAt(i) === b.charAt(j)) {
+        i += 1;
+        j += 1;
+        continue;
+      }
+      edits += 1;
+      if (edits > 1) return false;
+      if (aLen > bLen) {
+        i += 1;
+      } else if (bLen > aLen) {
+        j += 1;
+      } else {
+        i += 1;
+        j += 1;
+      }
+    }
+    if (i < aLen || j < bLen) edits += 1;
+    return edits <= 1;
+  }
+
+  function fuzzyTokenScore(token, words, haystack) {
+    if (!token) return 0;
+    if (haystack.indexOf(token) !== -1) return 40;
+    for (var i = 0; i < words.length; i++) {
+      var word = words[i];
+      if (!word) continue;
+      if (word === token) return 50;
+      if (word.indexOf(token) !== -1) return 30;
+      if (word.startsWith(token)) return 24;
+    }
+    if (token.length >= 3) {
+      for (var j = 0; j < words.length; j++) {
+        if (isSubsequenceMatch(token, words[j])) return 12;
+      }
+    }
+    if (token.length >= 4) {
+      for (var k = 0; k < words.length; k++) {
+        if (editDistanceAtMostOne(token, words[k])) return 8;
+      }
+    }
+    return 0;
+  }
+
+  function getRowSearchScore(row, query) {
+    if (!query.tokens.length) return 1;
+    var data = getRowSearchData(row);
+    var score = data.index.indexOf(query.normalized) !== -1 ? 120 : 0;
+    for (var i = 0; i < query.tokens.length; i++) {
+      var token = query.tokens[i];
+      var tokenScore = fuzzyTokenScore(token, data.words, data.index);
+      if (!tokenScore) return 0;
+      score += tokenScore;
+    }
+    return score;
+  }
+
+  function countByClassification(rows) {
+    var counts = {};
+    for (var i = 0; i < rows.length; i++) {
+      var cls = String(rows[i].classification || '').toUpperCase();
+      if (!cls) continue;
+      counts[cls] = (counts[cls] || 0) + 1;
+    }
+    return counts;
+  }
+
+  function countBySeverity(rows) {
+    var counts = {};
+    for (var i = 0; i < rows.length; i++) {
+      var sev = String(((rows[i].intelligence || {}).severity || 'INFO')).toUpperCase();
+      counts[sev] = (counts[sev] || 0) + 1;
+    }
+    return counts;
+  }
+
+  function creditBudgetForAuthMode(mode) {
+    var authMode = String(mode || '').toLowerCase();
+    if (authMode === 'anonymous') return 400;
+    if (authMode === 'basic' || authMode === 'oauth2') return 4000;
+    return null;
+  }
+
+  function summarizeRows(rows) {
+    var critical = 0;
+    var expiringSoon = 0;
+    var now = Date.now();
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (String(((row.intelligence || {}).severity || '')).toUpperCase() === 'CRITICAL') {
+        critical += 1;
+      }
+      if (!row.validtotimestamp) continue;
+      var expires = new Date(row.validtotimestamp).getTime();
+      if (!Number.isNaN(expires) && expires > now && (expires - now) < (2 * 60 * 60 * 1000)) {
+        expiringSoon += 1;
+      }
+    }
+    return {
+      active: rows.length,
+      critical: critical,
+      expiringSoon: expiringSoon,
+    };
+  }
+
+  function setDeltaMetric(elementId, delta, tone) {
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    var text = '--';
+    var klass = 'delta-flat';
+    if (typeof delta === 'number' && isFinite(delta)) {
+      text = delta > 0 ? ('+' + delta) : String(delta);
+      if (delta > 0) {
+        if (tone === 'risk') klass = 'delta-risk-up';
+        else if (tone === 'activity') klass = 'delta-activity-up';
+        else klass = 'delta-traffic-up';
+      } else if (delta < 0) {
+        klass = 'delta-down';
+      }
+    }
+    el.className = 'kpi-value sm ' + klass;
+    el.textContent = text;
+  }
+
+  function renderChangePanel(snapshot) {
+    var prev = state.previousNotamSnapshot;
+    setDeltaMetric('deltaActive', prev ? snapshot.active - prev.active : null, 'activity');
+    setDeltaMetric('deltaCritical', prev ? snapshot.critical - prev.critical : null, 'risk');
+
+    var expiringEl = document.getElementById('kpiExpiringSoon');
+    if (expiringEl) {
+      expiringEl.className = 'kpi-value sm ' + (snapshot.expiringSoon > 0 ? 'delta-activity-up' : 'delta-flat');
+      expiringEl.textContent = snapshot.expiringSoon.toLocaleString();
+    }
+
+    state.previousNotamSnapshot = snapshot;
+  }
+
+  function renderAircraftDelta(count) {
+    var prev = state.previousAircraftCount;
+    setDeltaMetric('deltaAircraft', prev != null ? count - prev : null, 'traffic');
+    state.previousAircraftCount = count;
+  }
+
+  function renderTrustPanel(metrics) {
+    state.aircraftMetrics = metrics || null;
+
+    var sourceEl = document.getElementById('trustSource');
+    var dotEl = document.getElementById('trustDot');
+    var ageEl = document.getElementById('trustAge');
+    var dbEl = document.getElementById('trustDb');
+    var httpEl = document.getElementById('trustHttp');
+    var creditsEl = document.getElementById('trustCredits');
+    var budgetEl = document.getElementById('trustBudget');
+    var storeEl = document.getElementById('trustStore');
+
+    if (!metrics) {
+      if (sourceEl) sourceEl.textContent = 'UNAVAIL';
+      if (dotEl) dotEl.className = 'dot dot-amber';
+      if (ageEl) ageEl.textContent = 'aircraft metrics unavailable';
+      if (httpEl) httpEl.textContent = '--';
+      if (creditsEl) creditsEl.textContent = '--';
+      if (budgetEl) budgetEl.textContent = '--';
+      if (storeEl) storeEl.textContent = '--';
+      updateSitRep();
+      return;
+    }
+
+    var authMode = String(metrics.auth_mode || 'unknown').toUpperCase();
+    var httpStatus = metrics.last_http_status == null ? '--' : String(metrics.last_http_status);
+    var staleSeconds = Number(metrics.stale_seconds);
+    var retryAfter = metrics.last_retry_after_seconds;
+    var nextPoll = metrics.next_poll_delay_seconds;
+    var creditBudget = creditBudgetForAuthMode(metrics.auth_mode);
+    var projected = metrics.projected_daily_credits;
+    var remaining = metrics.last_rate_limit_remaining;
+    var staleLabel = isFinite(staleSeconds) ? freshnessAgeLabel(staleSeconds) : 'unknown';
+    var degraded = metrics.last_http_status !== 200 || !!metrics.stale_alarm || retryAfter != null;
+    var caution = !degraded && (isFinite(staleSeconds) && staleSeconds > 90);
+
+    if (sourceEl) sourceEl.textContent = authMode;
+    if (dotEl) {
+      dotEl.className = degraded ? 'dot dot-red' : (caution ? 'dot dot-amber' : 'dot dot-green');
+    }
+    if (ageEl) {
+      var ageText = 'aircraft ' + staleLabel;
+      if (nextPoll != null) ageText += ' | next pull in ' + nextPoll + 's';
+      if (retryAfter != null) ageText += ' | backoff ' + retryAfter + 's';
+      ageEl.textContent = ageText;
+    }
+    if (httpEl) {
+      var latency = metrics.last_poll_latency_ms != null ? Math.round(metrics.last_poll_latency_ms) + 'ms' : '--';
+      httpEl.textContent = httpStatus + ' | ' + latency;
+    }
+    if (creditsEl) {
+      creditsEl.textContent = remaining == null ? '--' : Number(remaining).toLocaleString() + ' left';
+    }
+    if (budgetEl) {
+      if (projected == null || creditBudget == null) {
+        budgetEl.textContent = '--';
+      } else {
+        budgetEl.textContent = Number(projected).toLocaleString() + '/' + creditBudget.toLocaleString();
+      }
+    }
+    if (storeEl) {
+      var batches = metrics.stored_batch_count == null ? '--' : Number(metrics.stored_batch_count).toLocaleString();
+      var history = metrics.stored_history_count == null ? '--' : Number(metrics.stored_history_count).toLocaleString();
+      storeEl.textContent = batches + ' b | ' + history + ' h';
+    }
+
+    updateSitRep();
+  }
+
+  function updateSitRep() {
+    var crit = parseInt(document.getElementById('kpiCritical').textContent, 10) || 0;
+    var warn = parseInt(document.getElementById('kpiWarnings').textContent, 10) || 0;
+    var alerts = parseInt(document.getElementById('kpiAlerts').textContent, 10) || 0;
+    var el = document.getElementById('hdrSitRep');
+    if (!el) return;
+    var degradedFeed = !!(
+      state.aircraftMetrics
+      && (
+        state.aircraftMetrics.last_http_status !== 200
+        || state.aircraftMetrics.stale_alarm
+        || state.aircraftMetrics.last_retry_after_seconds != null
+      )
+    );
+    if (crit === 0 && warn === 0 && alerts === 0 && !degradedFeed) {
+      el.textContent = 'No active critical events';
+      el.style.color = 'var(--text-dim)';
+      return;
+    }
+    var parts = [];
+    if (degradedFeed) parts.push('FEED DEGRADED');
+    if (crit > 0) parts.push(crit + ' CRITICAL');
+    if (warn > 0) parts.push(warn + ' WARNING');
+    if (alerts > 0) parts.push(alerts + ' ALERT' + (alerts !== 1 ? 'S' : ''));
+    el.textContent = parts.join(' | ');
+    el.style.color = (degradedFeed || crit > 0) ? 'var(--red)' : (warn > 0 ? 'var(--amber)' : 'var(--text-bright)');
+  }
+
+  function renderStatus(payload, intelligenceSummary, visibleRows) {
     const valid = payload.database_valid;
     const initializing = payload.database_initializing;
-    const count = payload.active_notam_count || 0;
-    const counts = payload.classification_counts || {};
+    const count = Array.isArray(visibleRows) ? visibleRows.length : (payload.active_notam_count || 0);
+    const counts = Array.isArray(visibleRows) ? countByClassification(visibleRows) : (payload.classification_counts || {});
+    const severityCounts = Array.isArray(visibleRows) ? countBySeverity(visibleRows) : (intelligenceSummary ? (intelligenceSummary.severity_counts || {}) : {});
 
     // Header indicators
     const dbEl = document.getElementById('hdrDbStatus');
@@ -478,6 +1704,14 @@
 
     // KPIs
     document.getElementById('kpiTotal').textContent = count.toLocaleString();
+    if (intelligenceSummary || Array.isArray(visibleRows)) {
+      const critical = Array.isArray(visibleRows) ? (severityCounts.CRITICAL || 0) : (intelligenceSummary.critical_count || 0);
+      const warnings = severityCounts.WARNING || 0;
+      const noiseFiltered = intelligenceSummary ? (intelligenceSummary.noise_filtered_count || 0) : 0;
+      document.getElementById('kpiCritical').textContent = critical.toLocaleString();
+      document.getElementById('kpiWarnings').textContent = warnings.toLocaleString();
+      document.getElementById('kpiNoiseFiltered').textContent = noiseFiltered.toLocaleString();
+    }
 
     // Classification bars
     const barsEl = document.getElementById('classBars');
@@ -493,6 +1727,12 @@
         '<span class="count">' + c.toLocaleString() + '</span>' +
         '</div>';
     }).join('');
+
+    var trustDbEl = document.getElementById('trustDb');
+    if (trustDbEl) {
+      trustDbEl.textContent = valid ? 'LIVE' : (initializing ? 'INIT' : 'ERR');
+    }
+    updateSitRep();
   }
 
   // ---- Urgency helpers ----
@@ -616,7 +1856,7 @@
           color: urgencyBorder(urgency),
           weight: 1.5,
         });
-        marker.bindPopup(popupContent);
+        marker.bindPopup(popupContent, { keepInView: true, maxWidth: 320 });
         marker.on('click', function () {
           selectLocation(loc, byLocation[loc]);
         });
@@ -629,6 +1869,9 @@
     document.getElementById('kpiMapped').textContent = mappedCount.toLocaleString();
     document.getElementById('kpiUnmapped').textContent = unmappedCount.toLocaleString();
     document.getElementById('hdrMappedCount').textContent = mappedCount.toLocaleString();
+
+    // Render real-geometry airspace zone circles (L.circle, separate layer)
+    renderNotamZones(rows);
   }
 
   // ---- Select a location ----
@@ -643,13 +1886,19 @@
       const cls = (row.classification || '').toUpperCase();
       const urgency = getUrgency(row);
       const cd = formatCountdown(row);
-      return '<div class="detail-card">' +
+      const intel = row.intelligence || {};
+      const severity = String(intel.severity || '').toUpperCase();
+      const opCategory = String(intel.operational_category || '').toUpperCase();
+      const plainEnglish = intel.plain_english || '';
+      return '<div class="detail-card" data-fnsid="' + esc(String(row.fnsid || '')) + '">' +
         '<div class="d-header">' +
           '<span class="d-id">' + esc(String(row.fnsid || '')) + '</span>' +
           '<span class="cd cd-' + urgency + '">' + esc(cd) + '</span>' +
           '<span class="d-class d-class-' + esc(cls) + '">' + esc(cls || '--') + '</span>' +
         '</div>' +
         '<div class="d-loc">' + esc(loc) + '</div>' +
+        (severity ? '<div style="margin-top:4px"><span class="sev-badge sev-' + esc(severity) + '">' + esc(severity) + '</span> <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">' + esc(opCategory || 'UNKNOWN') + '</span></div>' : '') +
+        (plainEnglish ? '<div class="d-text" style="font-weight:600">' + esc(plainEnglish) + '</div>' : '') +
         '<div class="d-text">' + esc(row.notamtext || '') + '</div>' +
         '<div class="d-times">' +
           formatTimeCompact(row.validfromtimestamp) + ' -> ' +
@@ -660,6 +1909,37 @@
 
     // Highlight table rows
     highlightTableRows(loc);
+  }
+
+  function focusLocation(loc, fnsid) {
+    var targetLoc = (loc || '').toUpperCase();
+    if (!targetLoc) return;
+
+    var locRows = state.rows.filter(function (row) {
+      return (row.locationdesignator || '').toUpperCase() === targetLoc;
+    });
+    if (!locRows.length) return;
+
+    selectLocation(targetLoc, locRows);
+
+    var marker = state.markers.get(targetLoc);
+    if (marker) {
+      map.setView(marker.getLatLng(), Math.max(map.getZoom(), 8), { animate: true, duration: 0.3 });
+      marker.openPopup();
+    } else {
+      var airport = resolveLocation(targetLoc);
+      if (airport) {
+        map.setView([airport.lat, airport.lon], Math.max(map.getZoom(), 8), { animate: true, duration: 0.3 });
+      }
+    }
+
+    if (fnsid && window.CSS && typeof window.CSS.escape === 'function') {
+      var panel = document.getElementById('detailPanel');
+      var card = panel.querySelector('[data-fnsid="' + window.CSS.escape(String(fnsid)) + '"]');
+      if (card && typeof card.scrollIntoView === 'function') {
+        card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
   }
 
   function highlightTableRows(loc) {
@@ -686,8 +1966,15 @@
       return;
     }
 
-    // Sort by valid_to: soonest expiry first, PERMs last
+    var query = getSearchQuery();
+
+    // Sort by relevance when searching, otherwise by valid_to: soonest expiry first.
     const sorted = [...rows].sort((a, b) => {
+      if (query.tokens.length) {
+        var aScore = Number(a._search_score || 0);
+        var bScore = Number(b._search_score || 0);
+        if (aScore !== bScore) return bScore - aScore;
+      }
       const aTime = a.validtotimestamp ? new Date(a.validtotimestamp).getTime() : Infinity;
       const bTime = b.validtotimestamp ? new Date(b.validtotimestamp).getTime() : Infinity;
       return aTime - bTime;
@@ -702,15 +1989,22 @@
       const status = (row.status || '').toUpperCase();
       const urgency = getUrgency(row);
       const cd = formatCountdown(row);
+      const intel = row.intelligence || {};
+      const opCategory = String(intel.operational_category || '').toUpperCase();
+      const severity = String(intel.severity || '').toUpperCase();
+      const plainEnglish = intel.plain_english || '';
       return '<tr data-loc="' + esc(loc) + '" class="urgency-' + urgency + '">' +
         '<td>' + esc(String(row.fnsid ?? '')) + '</td>' +
         '<td>' + esc(loc) + '</td>' +
         '<td><span class="d-class d-class-' + esc(cls) + '">' + esc(cls) + '</span></td>' +
         '<td><span class="tag tag-' + esc(status) + '">' + esc(status) + '</span></td>' +
+        '<td>' + esc(opCategory || '--') + '</td>' +
+        '<td>' + (severity ? '<span class="sev-badge sev-' + esc(severity) + '">' + esc(severity) + '</span>' : '--') + '</td>' +
         '<td><span class="cd cd-' + urgency + '">' + esc(cd) + '</span></td>' +
         '<td>' + esc(formatTimeCompact(row.validfromtimestamp)) + '</td>' +
         '<td>' + esc(formatTimeCompact(row.validtotimestamp)) + '</td>' +
         '<td>' + esc(row.notamaccountability || '') + '</td>' +
+        '<td class="td-text">' + esc(plainEnglish) + '</td>' +
         '<td class="td-text">' + esc(row.notamtext || '') + '</td>' +
         '</tr>';
     }).join('');
@@ -729,34 +2023,101 @@
         }
       });
     }
+
+    // Narrative summary for decision context in table bar
+    var narrativeEl = document.getElementById('tableNarrative');
+    if (narrativeEl) {
+      var visibleLocations = new Set(sorted.map(function (r) {
+        return (r.locationdesignator || '').toUpperCase();
+      }).filter(Boolean)).size;
+      var critCount = sorted.filter(function (r) {
+        return String(((r.intelligence || {}).severity || '')).toUpperCase() === 'CRITICAL';
+      }).length;
+      var expiringSoon = sorted.filter(function (r) {
+        if (!r.validtotimestamp) return false;
+        var t = new Date(r.validtotimestamp).getTime();
+        return !isNaN(t) && t > Date.now() && (t - Date.now()) < 2 * 60 * 60 * 1000;
+      }).length;
+      var narrativeParts = [];
+      if (visibleLocations > 0) narrativeParts.push(visibleLocations + ' loc');
+      if (critCount > 0) narrativeParts.push(critCount + ' critical');
+      if (expiringSoon > 0) narrativeParts.push(expiringSoon + ' exp <2h');
+      if (state.aircraftMetrics && state.aircraftMetrics.stale_alarm) narrativeParts.push('aircraft stale');
+      narrativeEl.textContent = narrativeParts.length ? '  |  ' + narrativeParts.join(' | ') : '';
+    }
   }
 
-  // ---- Full refresh ----
-  async function refresh() {
-    const params = buildFilterParams();
-    const [statusData, rows] = await Promise.all([fetchStatus(), fetchNotams(params)]);
-    state.rows = rows;
-    renderStatus(statusData);
-
-    // Apply text search client-side
-    const filtered = applyClientFilters(rows);
+  function renderVisibleNotamState() {
+    const filtered = applyClientFilters(state.allRows || []);
+    state.rows = filtered;
+    state.filteredRows = filtered;
+    renderStatus(state.statusPayload || {}, state.intelligenceSummary || { noise_filtered_count: 0 }, filtered);
+    renderIntelligenceList(filtered);
+    renderChangePanel(summarizeRows(filtered));
     renderMap(filtered);
     renderTable(filtered);
+
+    if (state.selectedLocation) {
+      const locRows = filtered.filter(function (row) {
+        return (row.locationdesignator || '').toUpperCase() === state.selectedLocation;
+      });
+      selectLocation(state.selectedLocation, locRows);
+    }
+
+    if (state.aircraftPayload) {
+      renderAircraft(state.aircraftPayload);
+    }
+  }
+
+  async function refreshNotams() {
+    const params = buildFilterParams();
+    const [statusData, intelPayload] = await Promise.all([fetchStatus(), fetchNotams(params)]);
+    state.statusPayload = statusData;
+    state.intelligenceSummary = intelPayload.summary || null;
+    state.allRows = intelPayload.items || [];
+    renderVisibleNotamState();
+  }
+
+  async function refreshAircraft() {
+    const metricsPromise = fetchAircraftMetrics();
+    if (!state.aircraftVisible || state.mapInteractionActive) {
+      renderTrustPanel(await metricsPromise);
+      return;
+    }
+    const [aircraftData, metrics] = await Promise.all([fetchAircraft(), metricsPromise]);
+    renderTrustPanel(metrics);
+    if (!aircraftData) return;
+    state.aircraftPayload = aircraftData;
+    renderAircraft(aircraftData);
+    renderAircraftDelta((aircraftData.states || []).filter(passesAircraftFilters).slice(0, MAX_RENDERED_AIRCRAFT).length);
+  }
+
+  async function refreshAll() {
+    await Promise.all([refreshNotams(), refreshAircraft()]);
   }
 
   function buildFilterParams() {
     const params = {};
     const loc = document.getElementById('fLocation').value.trim().toUpperCase();
     const cls = document.getElementById('fClass').value;
+    const minSeverity = document.getElementById('fMinSeverity').value;
+    const includeNoise = document.getElementById('fIncludeNoise').checked;
     if (loc) params.location_designator = loc;
     if (cls) params.classification = cls;
+    params.min_severity = minSeverity || 'INFO';
+    params.include_noise = includeNoise ? 'true' : 'false';
     params.limit = '10000';
+    // ALL mode bypasses the server-side default 24h window
+    if (state.windowHours === 0) params.include_archived = 'true';
     return params;
   }
 
   function applyClientFilters(rows) {
-    const search = document.getElementById('fSearch').value.trim().toLowerCase();
+    const query = getSearchQuery();
     const showExpired = document.getElementById('fShowExpired').checked;
+    const windowMs = state.windowHours > 0 ? state.windowHours * 3600 * 1000 : 0;
+    const windowCutoff = windowMs ? Date.now() - windowMs : 0;
+
     return rows.filter(r => {
       // Hide expired NOTAMs unless the toggle is on
       if (!showExpired) {
@@ -767,11 +2128,21 @@
           if (!Number.isNaN(expires) && expires < Date.now()) return false;
         }
       }
-      // Text search
-      if (search) {
-        const text = (r.notamtext || '').toLowerCase();
-        const loc = (r.locationdesignator || '').toLowerCase();
-        if (!text.includes(search) && !loc.includes(search)) return false;
+
+      // Time window filter: hide NOTAMs that started before the window cutoff.
+      // NOTAMs without a validfromtimestamp are always shown (permanent / unknown start).
+      if (windowCutoff && r.validfromtimestamp) {
+        const starts = new Date(r.validfromtimestamp).getTime();
+        if (!Number.isNaN(starts) && starts < windowCutoff) return false;
+      }
+
+      // Search across raw text, plain English, facility/category, and identifiers.
+      if (query.tokens.length) {
+        var score = getRowSearchScore(r, query);
+        if (!score) return false;
+        r._search_score = score;
+      } else {
+        r._search_score = 0;
       }
       return true;
     });
@@ -813,12 +2184,17 @@
     const cols = [
       'fnsid','classification','locationdesignator','notamaccountability',
       'issuedtimestamp','updatedtimestamp','validfromtimestamp','validtotimestamp',
-      'status','notamtext',
+      'status','notamtext','ops_category','severity','plain_english',
     ];
     const lines = [cols.join(',')];
     for (const row of state.rows) {
       lines.push(cols.map(c => {
-        const t = String(row[c] ?? '');
+        var value = '';
+        if (c === 'ops_category') value = row.intelligence ? row.intelligence.operational_category : '';
+        else if (c === 'severity') value = row.intelligence ? row.intelligence.severity : '';
+        else if (c === 'plain_english') value = row.intelligence ? row.intelligence.plain_english : '';
+        else value = row[c] ?? '';
+        const t = String(value);
         return '"' + t.replace(/"/g, '""') + '"';
       }).join(','));
     }
@@ -864,19 +2240,108 @@
   })();
 
   // ---- Events ----
-  document.getElementById('btnRefresh').addEventListener('click', refresh);
+  document.getElementById('btnRefresh').addEventListener('click', refreshAll);
   document.getElementById('btnExport').addEventListener('click', downloadCsv);
-  document.getElementById('btnApply').addEventListener('click', refresh);
-  document.getElementById('fShowExpired').addEventListener('change', refresh);
-  document.getElementById('fSearch').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') refresh();
+  document.getElementById('btnApply').addEventListener('click', refreshNotams);
+  document.getElementById('intelSort').addEventListener('change', function () {
+    renderIntelligenceList(state.rows || []);
   });
-  document.getElementById('fLocation').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') refresh();
+  document.getElementById('intelList').addEventListener('click', function (e) {
+    var card = e.target.closest('[data-loc]');
+    if (!card) return;
+    focusLocation(card.dataset.loc || '', card.dataset.fnsid || '');
+  });
+  document.getElementById('alertList').addEventListener('click', function (e) {
+    var card = e.target.closest('[data-loc]');
+    if (!card) return;
+    focusLocation(card.dataset.loc || '', '');
+  });
+  // Time window buttons
+  document.getElementById('twGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('.tw-btn');
+    if (!btn) return;
+    var hours = parseInt(btn.dataset.hours, 10);
+    state.windowHours = hours;
+    // Update active state
+    document.querySelectorAll('#twGroup .tw-btn').forEach(function (b) {
+      b.classList.toggle('active', b === btn);
+    });
+    // ALL mode requires server re-fetch (to bypass 24h server filter); others re-filter client-side
+    if (hours === 0) {
+      refreshNotams();
+    } else {
+      renderVisibleNotamState();
+    }
   });
 
-  // ---- Auto-refresh every 30s ----
-  setInterval(refresh, 30000);
+  document.getElementById('fShowZones').addEventListener('change', function () {
+    renderNotamZones(state.filteredRows || []);
+  });
+
+  document.getElementById('fShowExpired').addEventListener('change', renderVisibleNotamState);
+  document.getElementById('fIncludeNoise').addEventListener('change', refreshNotams);
+  document.getElementById('fMinSeverity').addEventListener('change', refreshNotams);
+  document.getElementById('fShowAircraft').addEventListener('change', function (e) {
+    state.aircraftVisible = !!e.target.checked;
+    if (!state.aircraftVisible) {
+      state.aircraftLayer.clearLayers();
+      document.getElementById('kpiAircraft').textContent = '0';
+      document.getElementById('hdrAircraftCount').textContent = '0';
+    } else {
+      refreshAircraft();
+    }
+  });
+  document.getElementById('fShowTrails').addEventListener('change', refreshAircraft);
+  document.getElementById('fAltBand').addEventListener('change', refreshAircraft);
+  document.getElementById('fPhase').addEventListener('change', refreshAircraft);
+  document.getElementById('fSearch').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      if (state.searchDebounceTimer) clearTimeout(state.searchDebounceTimer);
+      renderVisibleNotamState();
+    }
+  });
+  document.getElementById('fSearch').addEventListener('input', function () {
+    if (state.searchDebounceTimer) clearTimeout(state.searchDebounceTimer);
+    state.searchDebounceTimer = setTimeout(function () {
+      renderVisibleNotamState();
+    }, 180);
+  });
+  document.getElementById('fLocation').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') refreshNotams();
+  });
+
+  // Click on empty map area clears the sidebar selection.
+  map.on('click', function () {
+    state.selectedLocation = null;
+    const panel = document.getElementById('detailPanel');
+    if (panel) panel.innerHTML = '<div class="detail-empty">Click a map marker or table row to inspect NOTAMs.</div>';
+    document.querySelectorAll('#tableBody tr').forEach(function (tr) { tr.classList.remove('row-selected'); });
+  });
+
+  map.on('movestart', function () {
+    state.mapInteractionActive = true;
+  });
+
+  // Explicit drag end is the main trigger for bbox updates to avoid twitchy refreshes.
+  map.on('dragend', function () {
+    state.mapInteractionActive = false;
+    if (state.bboxDebounceTimer) clearTimeout(state.bboxDebounceTimer);
+    state.bboxDebounceTimer = setTimeout(function () {
+      sendBboxControl().then(refreshAircraft);
+    }, BBOX_CONTROL_DEBOUNCE_MS);
+  });
+
+  map.on('zoomend', function () {
+    state.mapInteractionActive = false;
+    if (state.bboxDebounceTimer) clearTimeout(state.bboxDebounceTimer);
+    state.bboxDebounceTimer = setTimeout(function () {
+      sendBboxControl().then(refreshAircraft);
+    }, BBOX_CONTROL_DEBOUNCE_MS);
+  });
+
+  // ---- Split refresh cadences ----
+  setInterval(refreshNotams, NOTAM_REFRESH_MS);
+  setInterval(refreshAircraft, AIRCRAFT_REFRESH_MS);
 
   // ---- Update countdown badges every 15s without full refetch ----
   setInterval(function () {
@@ -884,24 +2349,25 @@
     var trs = document.querySelectorAll('#tableBody tr');
     for (var i = 0; i < trs.length; i++) {
       var tr = trs[i];
-      var loc = tr.dataset.loc;
       // Find the matching row from state
-      // For performance, just update the countdown cell (5th td, index 4)
+      // For performance, just update the countdown cell (7th td, index 6)
       var tds = tr.querySelectorAll('td');
-      if (tds.length < 5) continue;
+      if (tds.length < 7) continue;
       // We need to use the row data -- match by fnsid in first td
       var fnsid = tds[0].textContent;
       var row = state.rows.find(function (r) { return String(r.fnsid) === fnsid; });
       if (!row) continue;
       var urgency = getUrgency(row);
       var cd = formatCountdown(row);
-      tds[4].innerHTML = '<span class="cd cd-' + urgency + '">' + esc(cd) + '</span>';
+      tds[6].innerHTML = '<span class="cd cd-' + urgency + '">' + esc(cd) + '</span>';
       tr.className = tr.className.replace(/urgency-\w+/g, '') + ' urgency-' + urgency;
     }
   }, 15000);
 
   // ---- Boot ----
-  loadAirports().then(refresh);
+  loadAirports().then(function () {
+    sendBboxControl().then(refreshAll);
+  });
 })();
 </script>
 </body>
