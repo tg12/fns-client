@@ -267,3 +267,12 @@ Complete ground-up reimplementation. The original Java/Maven reference client ha
 
 *JS Labs Prototype by [James Sawyer](https://labs.jamessawyer.co.uk/) -- provided "as is" with no warranties of any kind. Not for operational aviation use.*
 
+## Support
+
+If you find this project useful, consider supporting it:
+
+| Currency | Address |
+|----------|---------|
+| **Bitcoin (BTC)** | `3QjWqhQbHdHgWeYHTpmorP8Pe1wgDjJy54` |
+| **Ethereum (ETH)** | `0x5851e6145F4773d1585b8686095FB16E368a4dA1` |
+| **ZCash (ZEC)** | `t1KSR5YkNPbjqRSCoLKo5AddFWdm9Kzxh1B` |
